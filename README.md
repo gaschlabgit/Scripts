@@ -21,6 +21,10 @@ UNIFIEDGENOTYPER.sh -- Run GATK unifiedgenotyper, assumes high memory 32GB ram w
 
 runHTSeqCount.py -- Run HTSeq for all gff feature types.
 
+rnaCountAlignments.py -- Systematically search and count all mapped reads in bam files
+                         associated w/ all rRNA loci.
+
+
 remove3primeAFastq.py -- Remove all consecutive 3 prime A's and quality scores from fastq
           where pattern is something like:
           nnnnnnnnnnnnnnnnnAAAGATCTAAAAAAAA 
