@@ -55,3 +55,5 @@ findDiffFasta.py
 yeastmine.py  -- how to use python to query yeastmine, just an example.
 
 getGeneNamesGff.py --  Create a gff file from Sean's annotation files for Kevin.
+
+runSnpSift.py  -- Run SnpSift on a list of files to extract variant specific files.
