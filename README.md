@@ -57,3 +57,9 @@ yeastmine.py  -- how to use python to query yeastmine, just an example.
 getGeneNamesGff.py --  Create a gff file from Sean's annotation files for Kevin.
 
 runSnpSift.py  -- Run SnpSift on a list of files to extract variant specific files.
+
+vcfStatsParser.pl -- Convert vcf-stats dump file into a table.
+
+getPrivateSnps.py -- Run vcf-contrast on vcf files, to get private variant vcf file for sample.
+
+calcHeterozygosityVCF.py -- Calculate % Heterozygosity on a list of private vcf files.
