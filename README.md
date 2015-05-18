@@ -45,12 +45,13 @@ parseSplitVCF.pl -- converts Snpeff vcf file into a more readable format,
 	   by removing some columns and optionally allowing user to subset
  	   data by strain, chromosome (one at a time) , user supplied start/stop positions
 
-Utilities to find unique sequences in fasta file, initiall used to help kevin 
+Utilities to find unique sequences in fasta file, initially used to help kevin 
 create a unique sequence file for y22-3 project.
 unionFasta.py
 uniqueFasta.py
 findFastaDups.py
 findDiffFasta.py
+sequenceLength.py -- input a fasta file, will print sequence name and length to stdout
 
 yeastmine.py  -- how to use python to query yeastmine, just an example.
 
