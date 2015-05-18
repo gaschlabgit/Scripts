@@ -14,53 +14,101 @@ Bowtie and bwa -- combo of the Gasch lab perl and bash scripts
 	BwaMeminputPE.pl
 	BwaMeminputSE.pl
 
-UNIFIEDGENOTYPER.sh -- Run GATK unifiedgenotyper, assumes high memory 32GB ram with 8 cores.
+UNIFIEDGENOTYPER.sh -- Run GATK unifiedgenotyper
+	
+	assumes high memory 32GB ram with 8 cores.
+	
 	Works on scarcity 6-10
+	
 	-- GATK raw variants vcf files as input, useful to rerun unifiedgenotyper without
 	running entire GATK pipeline.
 
-runHTSeqCount.py -- Run HTSeq for all gff feature types.
+runHTSeqCount.py  
+		
+		Run HTSeq for all gff feature types.
 
-rnaCountAlignments.py -- Systematically search and count all mapped reads in bam files
-                         associated w/ all rRNA loci.
+rnaCountAlignments.py  
+
+		 Systematically search and count all mapped reads in bam files
+                 associated w/ all rRNA loci.
 
 
-remove3primeAFastq.py -- Remove all consecutive 3 prime A's and quality scores from fastq
-          where pattern is something like:
-          nnnnnnnnnnnnnnnnnAAAGATCTAAAAAAAA 
+remove3primeAFastq.py 
+	
+	 Remove all consecutive 3 prime A's and quality scores from fastq
+        
+	  where pattern is something like:
+        
+	  nnnnnnnnnnnnnnnnnAAAGATCTAAAAAAAA 
+	
 		or
-          nnnnnnnnnnnnnnnAAAAAAAGATCGGAAGAGC
+        
+	  nnnnnnnnnnnnnnnAAAAAAAGATCGGAAGAGC
 
 utilities to change chrom names:
-convertChromNameFasta.py
-convertChromName.py
-convertChromName_SamFile.py
+	
+	convertChromNameFasta.py
 
-convertGene.py -- Create a strain specific gene sequence from a vcf file.
-convertGene_Genetics.py -- same as above but runs on deepthought
+	convertChromName.py
+	
+	convertChromName_SamFile.py
+
+convertGene.py 
+
+	Create a strain specific gene sequence from a vcf file.
+
+convertGene_Genetics.py 
+	
+	same as above but runs on deepthought
+	
 	yeast_Gene_name_to_ORF.py -- required by convertGene
  	
 
-parseSplitVCF.pl -- converts Snpeff vcf file into a more readable format, 
-	   by removing some columns and optionally allowing user to subset
- 	   data by strain, chromosome (one at a time) , user supplied start/stop positions
+parseSplitVCF.pl 
+	
+	converts Snpeff vcf file into a more readable format, 
+	
+	by removing some columns and optionally allowing user to subset
+ 	
+	data by strain, chromosome (one at a time) , user supplied start/stop positions
 
-Utilities to find unique sequences in fasta file, initially used to help kevin 
+Utilities for fasta files, initially used to help kevin 
 create a unique sequence file for y22-3 project.
-unionFasta.py
-uniqueFasta.py
-findFastaDups.py
-findDiffFasta.py
-sequenceLength.py -- input a fasta file, will print sequence name and length to stdout
 
-yeastmine.py  -- how to use python to query yeastmine, just an example.
+	unionFasta.py
 
-getGeneNamesGff.py --  Create a gff file from Sean's annotation files for Kevin.
+	uniqueFasta.py
 
-runSnpSift.py  -- Run SnpSift on a list of files to extract variant specific files.
+	findFastaDups.py
 
-vcfStatsParser.pl -- Convert vcf-stats dump file into a table.
+	findDiffFasta.py
+	
+	sequenceLength.py 
+	
+		input a fasta file, will print sequence name and length to stdout
 
-getPrivateSnps.py -- Run vcf-contrast on vcf files, to get private variant vcf file for sample.
+yeastmine.py  
 
-calcHeterozygosityVCF.py -- Calculate % Heterozygosity on a list of private vcf files.
+	how to use python to query yeastmine, just an example.
+
+getGeneNamesGff.py 
+	
+	Create a gff file from Sean's annotation files for Kevin.
+
+runSnpSift.py  
+
+	Run SnpSift on a list of files to extract variant specific files.
+
+vcfStatsParser.pl 
+
+	Convert vcf-stats dump file into a table.
+
+getPrivateSnps.py 
+
+	Run vcf-contrast on vcf files, to get private variant vcf file for sample.
+
+calcHeterozygosityVCF.py 
+
+	Calculate % Heterozygosity on a list of private vcf files.
+
+
