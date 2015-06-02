@@ -111,4 +111,11 @@ calcHeterozygosityVCF.py
 
 	Calculate % Heterozygosity on a list of private vcf files.
 
+coverageAnalysis.py
+
+	Copy Number Analysis, simple count reads for 1kb non-overlaping bins.
+
+fixFastaName.py 
+
+		Create a new fasta file, renaming each chrom. 
 
