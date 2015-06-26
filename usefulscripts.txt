@@ -1,0 +1,1424 @@
+**********************************************************************************************************************************
+Access windows shared drive via linux:
+**********************************************************************************************************************************
+There are two very easy ways to access shared folders in Linux. The easiest
+way (in Gnome) is to press (ALT+F2) to bring up the run dialog and type smb://
+followed by the IP address and the folder name. As shown below, I need to type
+smb://192.168.1.117/Shared. If you have your Windows account passworded, you
+will need to enter the password to access the shared folder.
+
+example:
+
+hit ALT+F2 -> enter: smb://bowser.lmcg.wisc.edu/BowserBackup 
+enter windows password when prompted.
+
+
+**********************************************************************************************************************************
+seqanswers username: mplace  pswd: lmcg9654
+
+***********************************************************************************************************************************
+LAB COMPUTER STUFF
+***********************************************************************************************************************************
+TO ADD nautilus scripts:
+
+add scripts here:   /home/username/.gnome2/nautilus-scripts/  
+Then they should show up in natilus.
+
+***********************************************************************************************************************************
+COPY lots of big file remotely from FTP site
+***********************************************************************************************************************************
+# wget ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/rs_fasta/\*
+# wget ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/chr_rpts/\*
+
+
+for i in {10..12}; do wget -m ftp://ftp.plantbiology.msu.edu/pub/data/Eukaryotic_Projects/o_sativa/annotation_dbs/pseudomolecules/version_7.0/chr0$i.dir/Chr$i.con;
+done
+
+
+***********************************************************************************************************************************
+ REDUCE THE SIZE OF AN SVG FILE
+***********************************************************************************************************************************
+rsvg -d 150 -p 150 hits.svg hits.png
+
+***********************************************************************************************************************************
+MAPS TO SVG
+***********************************************************************************************************************************
+Here is maps to svg:
+/omm/bin/javarun.sh edu.wisc.lmcg.prototype.maptosvg.MapToSvg
+
+***********************************************************************************************************************************
+Locations of sequence, insilico maps, loc tracs, assemblies
+***********************************************************************************************************************************
+loc tracs:  /omm/etc/humandb/
+
+assemblies: /disks/data/ase_vol01/iterassembly
+
+sequence/reference for iterassembly: /omm/etc/iterateAssembly/genomes 
+
+insilicomaps:  /omm/data/insilicomaps
+
+
+***********************************************************************************************************************************
+ tool for looking n-map stats (Nanocode, NANOCODE )
+***********************************************************************************************************************************
+
+~rodr/Binaries/AlignmentStats/AlignmentStats  
+AlignmentStats
+  <alignmentFile>     -- *.xml alignment file.
+  -l <fileList>       -- list of xml files to analyze.
+  -f <fragTable>      -- dump 1 to 1 aligned frag sizes.
+  -i                  -- include missing/extra cut chunks
+  -s                  -- dump chunk mathes to stdout <optMass> <refMass> pair
+  -minKB <minKB>      -- do not consider alignments to maps of less than <minKB> in size
+  -glist              -- group list filter (only stat molecules that are part of the group list)
+
+  use:  ~rodr/Binaries/AlignmentStats/AlignmentStats nmap-chr22.xml -s -i 1>out2 2>err3
+    results in a file like:
+    omdb:205694250:2252609_240_74_10 2429 2627
+    omdb:205694250:2252609_240_74_9 5903 5970
+ 
+    for each map there is the name, optMass, refMass
+    Only the gold fragments are reported
+
+    Then run:     ~steveg/bin/biasPlot out2    ( which plots the (opt mass - refmass)/refmass ) 
+ 
+Punctate Incorporation Rate (PUNCTATE)
+Steve's script:   ~mplace/bin/calculateErrorRates.v2.sh	 outputs a table
+giving rate information , run on directory for all merged.xml.gz files  ( */merged.xml.gz )
+
+
+GET All aligned maps for a nanocode data set using a list of group dirs:
+cat list | while read i; do cd $i; GetAlignedMaps.sh -f merged.xml.gz >> ../test.maps; cd ..; done
+
+
+Get list of  Best maps by score:
+
+for i in all_fac0.*.xml; do /home/mplace/bin/parseXMLandFileName.pl $i | awk
+'{ if($4 >= 5) print $0 }' >> /aspen/mplace/allparse.txt; done
+
+~mplace/bin/bestMapbySomaScore.pl allparse.txt > bestbyscore
+    
+***********************************************************************************************************************************
+TO ADD genome map to FLUFFLES: see chris's brain dump
+***********************************************************************************************************************************
+
+http://alcor.lmcg.wisc.edu/~churas/pipeline/iterativeassembly.txt
+run as root, here's an example:
+javarun.sh edu.wisc.lmcg.iterassembly.app.AddAssemblyToDb /aspen/mplace/Human_BamHI/04-01-2010 GM15510_BamHI-Final
+
+edu.wisc.lmcg.iterassembly.app.AddAssemblyToDb
+  -- This program takes a path to existing iterative assembly
+     and adds it to the database. Summary information will
+     be output to standard out and if there is an error such as
+     the assembly already exists in the database then the return
+     code will be non-zero and an error message will be output
+     Please note the creator field is currently not set and map
+     stats may not be totally set either
+
+
+Sometimes running this fails to add assembly to database, places to check:
+  1) FIRST! thing to check is that there is a chromlist file in the assembly directory,
+     fluffles seems to need this to properly show the assembly.
+  2) /omm/data/iterateAssembly  should show a assemblyName.maps.gz file like:  MM52-Post_finalmaps.maps.gz, nice but 
+     not actually needed.
+  3) db = ommdb table= iterassembly the database table where iterative assemblies are listed 
+  4) other assemblies listed at exports condor or in /omm/disks/ase_vol01/iterassembly
+     or here:   /disks/data/ase_vol01/iterassembly/MM52_Pre_2011_10_11
+**********************************************************************************************************************************
+
+
+
+to run chris's java scripts from command line
+
+/omm/bin/javarun.sh javaprogram
+
+For some reason There was a conflict with java and gnu java:
+had to add the locally installed java to $PATH in .bash_profile
+
+EmailQueryResult (This reproduces a report for Dave) (See Kerry or current Sys Admin to add new report) (runs from Mouse)
+
+      Commandline windows application that takes an xml file which defines an sql query along with an XSL Transform to generate email reports off of a Mysql database. Currently this tool is run daily at 6am on mouse to generate a series of reports summarizing collections. The program resides in C:\Program Files\LMCG\EmailQueryResult\ folder and in the sub folder project resides several .xml and .xsl files along with a batch file projectquery.bat which is called daily by Scheduled Tasks under user churas. To add a new daily report simply add the new command to the projectquery.bat file. 
+
+***********************************************************************************************************************************
+To run edu.wisc.lmcg.seq.flash.CreatePMap
+***********************************************************************************************************************************
+This creates a punctate map for NtSapI or NbBbvci 
+
+
+ javarun.sh edu.wisc.lmcg.seq.flash.CreatePMap -f 380H5.fa -enzyme NtSapI -label UTPF2 -resmap 380H5_resmap.maps -report 380H5_report.xls 
+
+***********************************************************************************************************************************
+Download DNA sequences using accession number from GENBANK 
+***********************************************************************************************************************************
+
+use home/mplace/bin/genbank-download-0.5/genbankdownload.py   w/ a bash script
+
+ex.  using a file listing accession numbers, one per line
+
+for i in $(cat listfile); do python ~/bin/genbank-download-0.5/genbankdownload.py -t fasta $i > $i.fasta; done
+
+This queries ncbi for each fasta sequence file and writes it to the current directory.
+
+
+
+***********************************************************************************************************************************
+TO DELETE RAW IMAGES FOR A PROJECT:
+***********************************************************************************************************************************
+> I need to delete raw images from the database.
+>
+> project name: SG-T7-BstEII
+
+I assume by this you mean you want the raw images for that project to
+be deleted from the OMM volumes, the images are not in the database.
+
+> How can this be done?
+
+You need to have someone (Gus, Brian, Kerry) go into the OMM database
+and edit the "project" table and set "delete_raw_images" to "yes" for
+that project.
+
+
+***********************************************************************************************************************************
+PERL 
+***********************************************************************************************************************************
+TRACE PERL SEGMENTATION FAULT ERROR:
+    perl -d:Trace ./alignmentLocations.byFragment.pl chr29_1st_10locs.xml >trace 2>&1
+	This will show the last line executed.
+
+PERL ONE LINERS:
+
+you can get the perl lib paths executing:    perl -le 'print foreach @INC'
+
+add perl lib by putting this in file:
+		
+		#!/usr/bin/perl
+		use lib "/home/path/lib";
+		use lib "/usr/another/lib";
+ 
+		use MyCustomModule;
+
+
+
+Convert unix to dos:  perl -i -p -e 's/\n/\r\n/' file
+
+Split line using multiple spaces as delimiter:
+ perl -F'\s{5,}' -nae 'print "$F[1]\n"; ' yeast_gene_name.table 
+
+ls *files | perl -e 'while(<>) { print "$_\n"}'      -- loops through listed files to do something 
+	for example:  to call avgfragsize.pl on a list of files use the following
+
+	 ls *fasta | perl -e 'while(<>) { system "avgfragsize.pl enzymelist $_" }'
+
+Loop through files *.BstEII.maps - store header, count number of fragments, calculate avg frag size, print file name , header and frags, then avgerage
+perl -nae 'if($_ =~ /^gi\|/){chomp; $x = $_; next;}else{ shift(@F); shift(@F); if($#F + 1 == 3 ){$sum=0; $sum += $_ for @F; $sum /= 3; print "$ARGV $x @F avg: $sum\n";} }' *BstEII.maps  > listof3FragBstEIIBacs
+
+
+zcat GM15510_BamHI.1-14-2010.hitRate.0.05.200kb.maps.gz  | perl -e 'while (<>) { if( /^omdb/|| /^(\s)*$/ ){next;} else {chomp; s/^s+//; @a = split/\t/; shift @a; shift @a; shift @a; $sum = 0; $sum += $_ for @a; print "\t$sum\n"; } }'
+
+
+Read file and sum size of contigs calculate avg frag size:
+
+cat ganoSilicomaps.txt | perl -e 'BEGIN{%h; %t;} while(<>){ @a = split/\t/; if($a[5]>0){$h{$a[2]} = ($h{$a[2]}+=$a[1]); $t{$a[2]}=($t{$a[2]}+=$a[5]);}  END{ while(($key,$value)= each(%h)){ print $key." ".$value." ".$t{$key}." ".$value/$t{$key}."\n";  }  }  }' | sort -n $1
+
+
+split lines in a file using @F: (splits using @F, with -extvar as delimiter
+
+ perl -F'-extvar' -nae 'foreach(@F){ print "$_\n";}' /omm/etc/s9variation_config/HumanB35
+
+Print all lines that repeat:
+This one-liner keeps track of the lines it has seen so far and it also keeps the count of how many times it has seen the line before. If it sees the line the 2nd time, it prints it out because ++$a{$_} == 2 is true. If it sees the line more than 2 times, it just does nothing because the count for this line has gone beyond 2 and the result of the print check is false.
+perl -ne 'print if ++$a{$_} == 2'
+
+REMOVE END FRAGMENTS FROM ALL MAPS IN A MAPSET:
+perl -F'\t' -nae 'if(/^\d/){ print $_; }else{ splice @F,3,1; pop(@F);  $ln =
+join("\t",@F); print "$ln\n";  }' BestAligned.maps
+
+
+Get mapset info:  size, frag count, maps 
+perl -MList::Util=sum -F'\t' -nae 'BEGIN{ print "size,freq\n"; }  if(/^20/ ||/^\n/ ){ next; }else{ shift(@F); shift(@F); shift(@F); $size=sum(@F); $fc=scalar(@F);  print "$size,$fc @F\n"; }' Apa75per-pixel.maps.304.maps | sort -t, -k2 -n 
+
+Count Fragments in a mapset make table( pixel n-maps):
+
+perl -F'\t' -nae 'BEGIN{ my %ct=();}  if($_ =~ /\d+_0_\d/ | $_ =~ /^\s*$/ ){
+next; }else { shift(@F); shift(@F); shift(@F); $s = (scalar @F)-1 ; $ct{$s} +=
+1; } END{ print "FragCt\tNumMole\n";  for $key(sort  keys %ct){ print
+"$key\t$ct{$key}\n";   }      }   ' 157.maps
+
+FragCt  NumMole
+1       511
+2       594
+3       626
+4       152
+5       36
+6       19
+7       10
+8       7
+9       1
+
+
+Filter mapsets using molecule length (300kb in this case)
+perl -MList::Util=sum -nae  'if(/^\n/){ next; }elsif(/^\d/){ $name = $_; }else{ @a = split(/\s+/,$_); shift(@a); shift(@a); $value=sum(@a); if($value > 300){ print "$name".$_."\n";}  }; ' 97-maps
+
+filter mapsets w/ omdb number:
+perl -MList::Util=sum -nae  'if(/^\n/){ next; }elsif(/^omdb/){ $name = $_; }else{ @a = split(/\s+/,$_); shift(@a); shift(@a); shift(@a);  $value=sum(@a); if($value > 500){ print "$name".$_."\n";}  }; ' bovine.maps
+
+filter mapset by groupID number (2234499_0_123 the first number before the _ ):
+ perl -F'\t' -nae 'if(/^n/ || /^\s*$/ ) {next;}elsif(/^\d/){@a=split('_',$F[0]); $name=$_; }else{ if($a[0] >=2382388 && $a[0]<=2382494 ){ print "$name".$_."\n";}   }    ' LED240_aligned.maps
+
+
+Capture a section of a chromosome map:
+perl -nae 'BEGIN{$test  =0; $sum = 0; @list; } if(/^\tNtBspQI/){ @a =split("\t",$_); foreach(@a){ $sum += $_;  if($sum <= 3550.069 && $sum >=4.954){ print "$_\t"; $test+= $_;  }   } }  ' reference.maps > /tmp/human-MHC-locus.maps
+
+Split file based on chr# being the first column in a tab delimited file, file is created for all different chr#
+ zcat L005.R1.map.bed.gz |head -100| perl -MFileHandle -F"\t" -nae 'if (not exists $fh{$F[0]}) {$fh{$F[0]}= FileHandle->new("|gzip -c > /tmp/$F[0].bed.gz"); } ; $fh{$F[0]}->print($_)'
+
+
+## break up into 50 mb pieces;  stat[7] give the size in bytes; divide by 1024^2 gives size in megabytes.
+
+cat snake_6C_scaffolds.fa  |perl -MEnglish -ne 'BEGIN{$RS = ">"; $j=0;  open M, ">scaffolds.$j.fa"} $fileSize = (stat M)[7]; $fileSize /= 1024*1024;if
+($fileSize > 100) {close M; $j++; open M, ">scaffolds.$j.fa"}; chomp; $i++; next if /^$/; s/^/>/;print M;  ' &
+
+
+toad$ perl -F',' -nae 'BEGIN{%a;}if($. == 1){next;}  if( $a{@F[16]})++$a{@F[16]}; } else { $a{@F[16]} = 1; } END{ for my $key( keys %a){ print "$key,$a{$key}\n"; } $total = $. -1; print "total = $total\n";} '
+loc_ReportSummary.loc 
+DEL,4
+MC,25
+EC,62
+INS,6
+total = 97
+
+
+process Gus's two-color omm export to give the full path for Prabu's INCA program
+
+perl -nae 'if($. >= 101){ s/\/omm\/disks/X:/;  s/\//\\/g;   print $_; }' gus_groups.txt > Human-gus-2-09-12.groups.partb.txt
+
+SPLIT MAPS ONE-LINER:
+~steveg/gits/deNovoAssembly/bin/algorithm/splitOpMapset.pl -sub 100 -splitmapsdir splitMaps_020912.100 -op 020912.100.maps
+
+split sequence fasta into separate files:
+perl -nae 'if(/>gi/){ @l = split(/\|/,$_); $h{$l[1]} = $_; }else { $h{$l[1]}.=$_;}END{  while( my ($key, $value) = each(%h )) { open FILE, ">$key" or die "Cannot open $key\n"; print FILE "$value\n"; close FILE;  } }  ' unplaced.scaf.fa 
+
+
+Add FILE NAME to map/consensus map name:
+for f in c*-1.consensus; do export f;  echo $f | cat $f | perl -nae 'if(/^#/){next;}else{ if(/^\s/){print $_;}else{ print "$ENV{f}-$_"; } }'; done > AllConsensus.maps
+
+REPLACE chromosome number w/ "chr#" in loc trac
+perl -i.orig -F, -nale '$F[1] = "chr$F[1]"; print join ",", @F' MM52.loc
+
+COUNT annovar gene annotations by type:
+
+perl -nae 'BEGIN{ %type ={};} @a= split(/\s+/,$_); if(not exists $type{$a[0]}){ $type{$a[0]}=1;}else{ ++$type{$a[0]}; }END{ for my $key( keys %type){ print "$key,$type{$key}\n"; }}' Jian_Ma1.sample1.avinput.variant_function | sort -t, -k2 -n
+
+how to run makeMapsetFromPixel.pl  :~/bin/nMaps/makeMapsetFromPixel.pl -run 735 -factor 203 
+
+*********************************************************************************************************************************** 
+PERL -MCPAN  (how to install modules)
+***********************************************************************************************************************************
+
+login as root, sudo su -
+
+type: 
+perl -MCPAN -e 'shell'    -- starts CPAN
+i /reg expression pattern/  -- search for module
+install module name
+exit
+
+TO INSTALL MULTIPLE PERL MODULES:
+cpan -i Crypt::DES Digest::CRC Digest::MD4 IO::Pty IO::Socket::SSL
+
+
+To use yum:
+sudo su -
+
+ yum install git-core
+
+
+
+***********************************************************************************************************************************
+BASH (bash)
+***********************************************************************************************************************************
+
+AWK(awk)
+
+Iterleave columns from 2 files:   paste file1 file2 | awk '{print $1,$2,$3,$5}'
+
+Print Columns by Number using AWK
+
+Print all columns:  $ awk '{print $0}' file
+
+Print the 3rd column: $ awk '{print $3}' file
+
+Print the 1st and the 3rd columns: $ awk '{print $1 $3}' file
+
+Count the number of fields in each row of file:       awk '{print NR,"->",NF}' inputfile
+
+Split file into unique files based on column value, where input file looks like:
+	Chr03 2227 4428 YJM1078
+	Chr04 1448886 1453980 YJM1078
+	Chr06 218288 229022 YJM1078
+	Chr12 309817 314304 YJM1078
+	Chr01 163329 164757 YJM1083
+	Chr06 253876 262199 YJM1083
+	Chr08 1437 19163 YJM1129
+	Chr01 162330 169574 YJM1133
+
+	awk '{ print >> ($4".bed") }' novelGenes.bed
+
+	This will create a file for each sample name (YJM*)
+
+	
+
+loop through files and add chrom number to the beginning of each line:
+ This works by defining a variable n to be $i pass from bash.
+
+    for i in {1..22}; do awk -v n=$i '{ print n" "$0 }' chr$i\_postnorm.bin; done
+
+Print header and 2 columns from file, tab delimited:
+
+    awk 'BEGIN{ print "grIn\trdIn" } { print $10, "\t", $12 }' A12_122313_CTD2At0vst30_CRB.ftr
+
+Count reads in bamfile using awk (just an illustration about how awk works, useful if you don't have a .bai file):
+samtools view Gasch138_test.sort.bam | awk ' BEGIN{ start = 455933; stop = 457732; } { if ($3 ~/ref\|NC_001144\|\[R64\]/ && $4 >= start && $4 <= stop )    print $0 }' | wc -l
+
+Take a list of files and delete them based on a specific line count:
+
+  cat files | while read i; do wc -l $i | awk '$1 == "59"{ print $0 }' | xargs rm ;  done
+
+
+SED (sed) 
+extract a range of line numbers from a file:
+This print all lines between 5830 and <= 11662 from file.
+
+    sed -n 5830,11662p condorsubmit.dsf > condorsubmit-chr2.dsf
+
+ insert a line a the beginning of a group of files:
+ 
+    sed -i -e "1iText To Insert Here" groupoffiles
+
+ delete first n lines from a list of files:
+
+ cat files | while read i; do sed -i '1,49d' $i ; done
+
+Remove [R64] from sam file:
+
+  sed -e 's/\[R64\]//g' test.sam 
+
+Insert header line as first line in a list of file:
+
+  for i in Gasch*_HTseqOutput.txt; do  eval "sed -i '1s/^/gene\t${i%.com*}\n/' $i";  done
+      so file now looks like:
+		gene	Gasch253
+		Q0010	171
+      merge the count Gasch# columns for all files, even numbers = cts:
+     paste Gasch2* | awk '{ print $1,$2,$4,$6,$8,$10 }'  
+
+print all words on line as a column (list)
+	cat list | sed 's/\s/\n/g'
+
+Loop through a file line by line and do something (Bash)
+
+   while read line; do echo $line; done < input.txt
+or 
+   cat chromlist  | while read line; do echo $line  ; done
+
+compare 2 files:
+
+cat list1 | while read i ; do grep -i $i list; done
+
+
+use a for loop to process lines in a file:
+
+   for i in $(cat myfile.txt); do echo $i; done 
+
+
+use for loop to do something with .txt file in a directory
+
+   for i in *.txt; do echo $i; done
+
+remove file ext : name = ${file%\.*}
+
+find lines in one file base on words (one per line ) in another file:
+  
+   while read i ; do grep $i names_matched.txt ; done < SnpStats/duplicate_samples.txt
+
+
+This is an example of using a bash for loop to access pathfinder groups to process a file and renaming the file
+by removing the beginning portion of the file name.
+for i in /omm/disks/omm_vol*/groups/group1-{1944249..1944339}; do parseOmari.pl $i/run0/omari_markup.xml.gz ${i##*/}; done
+
+see: http://tldp.org/LDP/abs/html/parameter-substitution.html  for more
+command line substitution help
+
+To have different .bashrc profiles on diff machines:
+You can put things like:
+
+if [ $HOSTNAME = "abc-01" ]; then
+        sh ~/.bashrc_abc01
+fi
+
+
+if [ $HOSTNAME = "abc-02" ]; then
+         sh ~/.bashrc_abc02
+fi
+
+in .bashrc and create different scripts .bashrc_abc01, .bashrc_abc02 with the
+actual commands. Or if there are not that many commands, you can put them in
+the if statements.
+
+TO avoid ESC characters when listing file or dirs:  use /bin/ls  
+
+cat all-calls.loc | sort -t, -g -k2
+sort this: by 2nd column:  chr15:102521401-102531400,15,102521401,102531400,deletion,10000
+
+
+sort first by chr# then by start position, cat MCF7-BamHI-all.loc | sort -t, -k2,2 -k3,3n > ck
+file looks like: 
+omdb:171202995:2054573_0_87,chr1,487955,1004447,3.182,N,46,49,505520,26659,-7613
+Then run:  for i in {1..22}; do grep "chr$i," ck; done to put chr# in correct
+order.
+
+RUN xml2loc on nanocode merged.xml.gz files then remove the 'chr' from the
+chrom name:
+
+for i in 2467*/; do cd $i; xml2loc.pl merged.xml.gz;   cd ..;  done
+
+for i in 2467*/; do cd $i; sed -i 's/chr//' merged.loc  ;   cd ..;  done
+
+To FIND (find) all empty files in directory:
+  find . -empty 
+
+To FIND and delete all empty file in directory:
+find chr*/1.1-opMapAlignment/trim4/output/0/ -empty -type f -delete
+
+find dirName -empty -type f -delete
+
+
+Concatenate files including the file names as headers:
+ for f in *_HTseqOutput.txt; do echo $f; cat $f;  done >> check.txt
+
+
+
+***************************************************************************************************************
+NANOCODING BASH examples
+***************************************************************************************************************
+merge all xml files;
+
+merge_xml.pl <list of xml files>  
+
+Get total hits for a set of groups:
+for i in 247*/; do [ -f $i/"merged.xml.gz" ] &&  GetAlignedMaps.sh -f
+$i"merged.xml.gz" >> TotalHits.maps; done
+
+List .maps files access in the last 10 days:    find -name '246*.maps' -mtime -10 -type f
+
+FIND MAPS FILE CREATED BETWEEN 2 DATES:
+find . -type f -name '2*.maps' -newermt 2014-07-18 ! -newermt 2014-07-29 > thisWeeksList
+
+Use a list to get aligned maps: 
+cat list | while read i; do [ -f $i/"merged.xml.gz" ] &&  GetAlignedMaps.sh -f $i"/merged.xml.gz" >> TotalHits.maps; done
+
+merging with xargs:
+for i in {145..255}; do find . -type f -name "sub*$i*.xml" | xargs merge_xml.pl; mv merged.xml.gz $i.merged.xml.gz; done
+
+for i in {145..255}; do GetAlignedMaps.sh -f $i.merged.xml.gz > $i-aligned.maps ; done
+
+Count the number of molecules in a batch of xml files:
+for i in {145..255}; do echo -n "$i  "; mass3 $i-aligned.maps | grep -i 'Number of Molecules'; done 
+
+use to get all input maps (use same list as previous):
+cat TotalGroups-Aug04104 | while read i; do cat $i >> TotalInput-Aug042014.maps; done
+
+For Total Collection Stats :
+
+	Input Maps:
+	 1) ls 2*-34.maps > maplist
+	 2) cat maplist | while read i; do cat $i >> TotalSoFar.maps; done
+	Hit Maps:
+	 1) remove .maps from list
+	 2) cat maplist | while read i; do [ -f $i/"merged.xml.gz" ] &&  \
+	    GetAlignedMaps.sh -f $i"/merged.xml.gz" >> TotalHitSoFar.maps ; done
+	 
+
+Get a bit of  opmap collection stats:
+1) export view of data collection
+2) Get hit information by running:
+ awk 'BEGIN{ FS="\t" }; { print $9 }' merker-stats.txt | perl -nae 'BEGIN{ $sum = 0; } chomp; $sum+=$_; END{ print "sum: $sum \n";}'
+3) Get input map stats from ommcraft by exporting the mapset.
+
+
+
+***********************************************************************************************************************************
+IMAGE STUFF
+***********************************************************************************************************************************
+get tiff header information:  
+tiffinfo  -- program which will read tiff header
+
+CONVERT TIFF to OMI:
+Basically, you do this:
+
+tifftopnm -byrow file.tif | ~forrest/images/pgm_to_omi2.Linux >file.omi
+
+For image stacks (I peeked in your directory looking for sample images
+and ran into multiple image TIFF files) you can do this:
+
+tifftopnm -byrow file.tif | pamsplit - image%d.pgm -padname=3
+for FILE in image???.pgm
+do
+   ~forrest/images/pgm_to_omi2.Linux <$FILE >${FILE/%pgm/omi}
+done
+
+**********************************************************************************************************************************
+PEAK_FINDER
+**********************************************************************************************************************************
+SEE THE README file
+
+quick build and compile for peak_finder:
+
+$ cd ~/src/gnomm
+
+$ Scripts/autogen.sh
+
+$ cd build-opt-Linux/peak_finder_main
+
+$ make
+
+You can also do a make in "build-debug-Linux/peak_finder_main" if you
+want an executable that is better for running with gdb.
+
+In general, once you've run "Scripts/autogen.sh" you can "cd" to the
+"build-{debug,opt}-Linux/<tool>" directory and run "make".
+
+**********************************************************************************************************************************
+Gentig & Iterative Assembly
+**********************************************************************************************************************************
+The "DATASETTOUSE" needs to be available on AFS.  The AFS server used
+by LMCG is "north.cs.wisc.edu".  The AFS directory the file needs to
+be in is "/afs/cs.wisc.edu/p/condor/workspaces/lmcg/".  The login name
+to use is "dforrest".  The password is "LMCG$afs" (without quotes).
+
+For example, for your latest assembly:
+
+$ scp -p /aspen/mplace/Ganoderma/it14/ganoderma.maps \
+dforrest@north.cs.wisc.edu:/afs/cs.wisc.edu/p/condor/workspaces/lmcg/
+
+
+Once you have done this, you need to wait about 10 minutes for it to
+propagate to the various machines.
+
+********
+GENTIG
+********
+gentig jobs can be submited using gentigcondor_job files, which look like:
+
+Universe        = Standard
+Executable      = /omm/releases/bin0974/gentig2_condor
+Requirements    = VirtualMemory >= 1500000 && Memory >= 800
+
+Log             = condor_job.log
+Notify_User     = condor@lmcg.wisc.edu
+Local_Files     = /etc/mtab /proc/meminfo IOhack.*
+Compress_Files  = *.gz
+
+Arguments       = -HQ0.05 -HE0.12 -SL15 -S4.2 -S3.5 -D0.8 -F0.005 -PM0.3 -T0.0001_0.001_0.01 -CS1.2 -OPT1_
+2_7 -msort4 -csort2 -csortm4 -B2 -q3 -autoseed6 -b8_1 -l0  -E8 -hashmin -qsort2 -mapordered0 -noswapdisk -
+Wscale0.3_7 -p6_1_0_1_q0_6_HM2_2_3_3_6_6_E10 -i chiggins_unaligned.maps -partialchigg2 -o unaligned2
+queue
+
+TO RUN GENTIG LOCALLY:
+ gentig2_condor -HQ0.05 -HE0.12 -SL15 -S4.2 -S3.5 -D0.8 -F0.005 -PM0.3 -T0.001_0.01_0.1 -CS1.2 -OPT1_2_7 -msort4 -csort2 -csortm4 -B2 -q3 -autoseed6 -b8_1 -l0  -E8 -hashmin -qsort2 -mapordered0  -noswapdisk -Wscale0.3_7 -p6_1_0_1_q0_6_HM2_2_3_3_6_6_E10 -i comboTotal.consensus
+
+TO SET UP A LONG LIST of GENTIG JOBS:
+
+for i in contig*; do echo Arguments = -HQ0.05 -HE0.12 -SL15 -S4.2 -S3.5 -D0.8 -F0.005 -PM0.3 -T0.0001_0.001_0.01 -CS1.2 -OPT1_2_7 -msort4 -csort2 -csortm4 -B2 -q0.5_6 -autoseed6 -b8_1 -l0 -E8 -hashmin -qsort2 -mapordered0 -noswapdisk -Wscale0.3_7 -p6_1_0_1_q0_6_HM2_2_3_3_6_6_E10 -i $i  queue ; done 1>> gentigcondor_job
+
+
+FROM Shiguo concerning gentig (GENTIG)
+
+gentig_condor 
+usage:
+/home/szhou/bin/gentig_condor [-NEW] [-OMMBIN <bindir>] mapfile [ -S<maxSD>
+-s<avSD> -D<digestrate> -F<falsecutrate> -T<false_positive_rate> ... ]
+For a full list of options run :
+% contig -help
+OR For gentig -NEW
+% gentig2 -help
+
+Example : To reprocess then contig a set PepesDNA and BamH1 :
+% genprocess PepesDNA BamH1 > pepes.runs
+% getmaps pepes.runs W > pepes.maps
+% gentig pepes.maps
+% convex pepes.contig
+toad$ gentig_condor 
+usage:
+/home/szhou/bin/gentig_condor [-NEW] [-OMMBIN <bindir>] mapfile [ -S<maxSD>
+-s<avSD> -D<digestrate> -F<falsecutrate> -T<false_positive_rate> ... ]
+For a full list of options run :
+% contig -help
+OR For gentig -NEW
+% gentig2 -help
+
+Example : To reprocess then contig a set PepesDNA and BamH1 :
+% genprocess PepesDNA BamH1 > pepes.runs
+% getmaps pepes.runs W > pepes.maps
+% gentig pepes.maps
+% convex pepes.contig
+
+
+
+
+*******
+SOMA
+*******
+soma can be run locally using: 
+
+ soma_align.LINUX 
+soma_align [--refrange=1-*] [--optrange=1-*] parameter-file
+ --refrange='1-*' :: reference map index range.
+ --optrange='1-*'   :: optical map index range to align against reference maps.
+ --k KMerConfigFile :: Hashing config file.
+ --zip              :: Compress output.
+ parameter-file     :: alignment parameter file.
+
+Run Like this:  soma_align.LINUX somaParameterfile > output.xml 
+
+
+
+soma condor submit example:
+Universe                 = vanilla
+Executable               = /omm/bin/soma_align.$$(OPSYS)
+Arguments                = soma.param.1
+Notification             = Never
+Should_Transfer_Files    = Yes
+When_To_Transfer_Output  = On_Exit
+Transfer_Input_Files     = soma.param.1,human-BamHI-wchr-b37-mf0.4.maps,/aspen/mplace/Merker_pre_BamHI/chr6/3.3-consensusAlignment/trim4/input/soma_input.maps
+Input                    = /exports/aspen/mplace/Merker_pre_BamHI/chr6/3.3-consensusAlignment/trim4/input/soma_input.maps
+Output                   = 1/soma_input.1.1.xml
+Error                    = queue/error/condor_job.1.err
+Log                      = queue/error/condor_job.1.log
+Queue
+
+
+
+To Change gentig parameters for iterativeAssembly:
+
+Try  -gentigParameters <file> on the iterateAssembly.pl command line.
+
+-gentigParameters <file>
+        Sets alternate parameters for gentig to use. This file gets read
+        every iteration so it is possible to change things as processing as
+        running, but it is probably not a good idea
+
+You might need to read the code in    lib/SubmitGentigs.pm  to get the format of the file correct.
+
+TO See parameters for iterative assembly look here:
+Parameters => "-HQ0.05 -HE0.12 -SL30 -S4.2 -s3.0 -D0.8 -F0.005 -PM0.5
+-T0.00001_0.0001_0.001 -CS1.2 -OPT2_2_7 -msort4 -csort2 -csortm4 -B2 -q0.5_6
+-autoseed6 -b8_1 -l0 -E8 -hashmin -qsort2 -mapordered1 -swapdisk_swap
+-Wscale0.3_7 -p6_1_0_1_q0_6_HM2_2_3_3_6_6_E10 -noswapdisk ",
+	InputMapsFiles => undef,
+
+/exports/home/mplace/bin/iterateAssembly/bin
+toad$ ./iterateAssembly.pl 
+
+Location of Lab's insilicomaps:   /omm/data/insilicomaps/ 
+
+
+**********************************************************************************************************************************
+RUNNING VARIATION
+**********************************************************************************************************************************
+
+% Variation
+variation <inputFile>
+  inputFile -- configuration file telling variation how to run
+
+===============================
+ls /exports/condor/GM10860/chr1/8.4-variation/trim4/output/autovar_chr1/
+
+
+================================
+% VariationReportToLoc
+VariationReportToLoc (required flags) (filter flags)
+
+=======================================
+/home/steveg/bin/iterateAssembly/variationScripts/fromConsensusAlignment2Variation.pl
+
+mv chr22/8.4-variation chr22/8.4-variationTest
+
+for chr in `pwd`/chr*/; do ~steveg/bin/iterateAssembly/variationScripts/fromConsensusAlignment2Variation.pl -base $chr -it 8 -var /omm/etc/variation_config/defaulthumanb36wgap ; done 2> var.err &
+
+TO RUN ON A SINGLE CHR:
+
+ ~steveg/bin/iterateAssembly/variationScripts/fromConsensusAlignment2Variation.pl -base /exports/aspen/mplace/Human_BamHI/04-01-2010/consensusAlignmentTest/test0/chr1 -it 8 -var /omm/etc/variation_config/defaulthumanb36wgap  done 2> var.err&
+
+
+To get a summary of a given iterative assembly:
+javarun.sh edu.wisc.lmcg.iterassembly.app.TableS1 -assem /dir/of/assembly -iteration #
+
+@@@@ MAKE SURE THERE IS A CHROMLIST FILE IN THE SAME DIRECTORY AS THE ASSEMBLY
+
+This produces a nice table of summary stats.  This program doens't resolve
+links, so you must have the right permission/ownership to run it.
+
+VARIATION ON CONDOR:
+
+cat <<HEADER
+executable =
+/exports/home/steveg/bin/iterateAssembly/variationScripts/fromConsensusAlignment2Variation.pl
+universe = vanilla
+should_transfer_files = false
+should_transfer_executable = false
+requirements = FileSystemDomain =?= "lmcg.wisc.edu"
+output = var.\$(cluster).\$(process).out
+error = var.\$(cluster).\$(process).err
+log = var.\$(cluster).log
+
+HEADER
+
+dir=$1
+iteration=$2
+varparam=$3
+for chr in $(seq 1 22) X Y; do
+cat <<COMMAND
+arguments = -base ${dir}/chr${chr} -it ${iteration} -var ${varparam}
+queue
+
+COMMAND
+done
+===================================8<===================================
+
+So you could run this:
+
+$ runvariation.sh /aspen/nwp/ia-20130102 8 /omm/etc/variation_config/BiasCorrectedHumanb37wgap > runvariation.cmd
+$ condor_submit runvariation.cmd
+
+
+**********************************************************************************************************************************
+FRAGMENT COUNTS FOR SOMA ALIGNMENTS
+**********************************************************************************************************************************
+Nathan has a program which counts all aligned fragments along a reference map:
+
+~nwp/xmlmerger/counts -i chr1.merged.xml
+
+
+**********************************************************************************************************************************
+LiftOver
+**********************************************************************************************************************************
+
+cat /omm/etc/humandb/hg17_ext_tracks/5-30-hg17refGeneSymbol.loc | ~steveg/bin/liftOver/b35Loc2b36Loc.pl 1> /tmp/refGene.loc  2> /tmp/refGene.err
+
+
+**********************************************************************************************************************************
+PathFinder
+**********************************************************************************************************************************
+
+to build pathfinder - had to pass a 64-bit flag to autogen.sh 
+this creates a new dir: 
+/home/mplace/src/gnomm/build-opt-Linux-x86_64/PathFinder
+
+run make and the executable will be created in that dir.
+
+make changes to code:
+
+
+/home/mplace/src/gnomm/libpathfinder
+
+also another dir: 
+(not sure what is here)
+/home/mplace/src/gnomm/PathFinder
+
+**********************************************************************************************************************************
+Illumina sequence reads (short reads)
+**********************************************************************************************************************************
+
+programs to use: Bowtie, Samtools, gnuplot
+
+1) Use bowtie to create a .sam file
+2) Take the .sam file from bowtie and use samtools to create a .bam file
+3) take that .bam file and use samtools to make a sorted file (see samtools help)
+4) use samtools on the sorted file to create a pileup file.
+
+to number of reads:
+
+java -jar ~/NetBeansProjects/binData/dist/binData.jar
+
+use gnuplot to make graph
+
+
+**********************************************************************************************************************************
+Linux Directories explained
+**********************************************************************************************************************************
+Directory Content
+/bin Common programs, shared by the system, the system administrator and the users.
+/boot The startup files and the kernel, vmlinuz. In some recent distributions also grub data. Grub is the GRand Unified Boot loader and is an attempt to get rid of the many different boot-loaders we know today.
+/dev Contains references to all the CPU peripheral hardware, which are represented as files with special properties.
+/etc Most important system configuration files are in /etc, this directory contains data similar to those in the Control Panel in Windows
+/home Home directories of the common users.
+/initrd (on some distributions) Information for booting. Do not remove!
+/lib Library files, includes files for all kinds of programs needed by the system and the users.
+/lost+found Every partition has a lost+found in its upper directory. Files that were saved during failures are here.
+/misc For miscellaneous purposes.
+/mnt Standard mount point for external file systems, e.g. a CD-ROM or a digital camera.
+/net Standard mount point for entire remote file systems
+/opt Typically contains extra and third party software.
+/proc A virtual file system containing information about system resources. More information about the meaning of the files in proc is obtained by entering the command man proc in a terminal window. The file proc.txt discusses the virtual file system in detail.
+/root The administrative user's home directory. Mind the difference between /, the root directory and /root, the home directory of the root user.
+/sbin Programs for use by the system and the system administrator.
+/tmp Temporary space for use by the system, cleaned upon reboot, so don't use this for saving any work!
+/usr Programs, libraries, documentation etc. for all user-related programs.
+/var Storage for all variable files and temporary files created by users, such as log files, the mail queue, the print spooler area, space for temporary storage of files downloaded from the Internet, or to keep an image of a CD before burning it.
+
+**********************************************************************************************************************************
+Text files 
+**********************************************************************************************************************************
+
+hexdump -db textfile  -- dumps the hex code plus the character information, useful to compare files
+dos2unix -- to convert windows text files to linux
+
+**********************************************************************************************************************************
+Packaging Mapping Projects for shipping to collaborator
+
+**********************************************************************************************************************************
+
+1) create clean final contigs
+2) open and save using /omm/beta/genspectx2 this puts the .xml file in the proper format for use w/ gnommspace
+3) use "contigsvg" to generate pretty Adobe SVG drawings of contigs 
+4) place each of the contigs on an adobe document 
+5) create a stats table: # molecules per contig, x coverage, contigstats (calculate stdev of frag size), note any special features like a repeat
+
+******************************************************************
+SUDO
+******************************************************************
+sudo su -     (allows me to become root on toad, prompts for password)
+
+
+******************************************************************
+CUTOFF SCORE
+******************************************************************
+
+If you have optical map data run: ~steveg/bin/scoreCutoff/makeReferenceFromOpMaps.pl 
+this will generate a reference to use with the scoreCutoff.pl program. example:
+
+ ~steveg/bin/scoreCutoff/makeReferenceFromOpMaps.pl -c 1,1000000000 -m .25 parrot.maps > reference.maps
+
+Otherwise just use what sequence data is available.
+
+~steveg/bin/scoreCutoff/scoreCutoff.pl   -op <op mapset>  -ref <ref mapset>   -soma <soma parameter template>
+the some.param.template file is in ~mplace/bin/   
+*****************************************************************
+CREATING GENOME SVG CHARTS
+*****************************************************************
+
+1) Open Nautilus, select the location files to use, 
+   example:  mouse_contig_coverage.loc , mouse_gaps.loc
+
+2) Go to scripts, choose CreateSvg.sh
+
+3) Choose organism -> skip block stagger by clicking cancel ->
+   choose color for 1st loc file click ok (and so on for each
+   loc file you have (limit is 5) click cancel for each color
+   you don't have a loc file for.
+4) enter a name for the file and your done.
+
+an ALTERNATE method to Create an SVG, use the command line:
+
+
+Steps to generate a svg from your soma alignments:
+(an alternate way for simple xml files is to use contigsvg ) 
+
+1)  xml2loc.pl  <your xml file>  produces a file yourfile.loc
+   ex. xml2loc.pl merged.xml.gz -outdir /home/mplace/output/
+    xml2loc.pl is usually run on a merge of a large number of soma results
+
+using bash for lots of merged.xml files:	
+	for i in chr*.merged.xml.gz; do xml2loc.pl $i ; done
+
+2) perl -nae 's/chr//; print $_; ' yourfile.loc > result.loc   ( removes the chr from chr1 etc... This was causing a problem)
+
+using bash for multiple files:
+	 for i in chr*.merged.loc; do perl -pi -e "s/,chr/,/;" $i; done
+
+using bash to merge multiple loc trac files:
+	for i in {1..29}; do cat chr$i.merged.loc >> result.loc; done
+
+
+3) /home/churas/bin/svgGenome2.pl -f  result.loc  -seq ~mplace/bin/sequence.loc -seqorder ~mplace/bin/chromlist > gus.svg
+  
+EXPLAINED A BIT MORE BELOW:
+
+/home/churas/bin/svgGenome2.pl -f /home/steveg/forGus/995.loc -seq  /tmp/seqloc -seqorder /tmp/chromlist
+
+where 
+-f file looks like a standard loc trac file: (this can be created using
+xml2loc.pl ) 
+
+#label,chromosome,start,end,score,orient,count,numfrags,alignmass,1staligncut,lastaligncut
+2078688_115_485,16,26538363,26674994,4.909,R,12,12,135185,12771,-29803
+2078868_115_17,16,4192908,4419968,2.758,R,19,20,193983,26036,-4130
+
+-seq is a chromosome loc trac file, with each chr listed once w/ start and end positions (length of chromosome)
+( there is a copy of the file ~mplace/bin/seqloc or sequence.loc (ordered))
+
+chr11,11,1,135006516
+chr21,21,1,48129895
+chr7,7,1,159138663
+chrY,Y,1,59373566
+chr17,17,1,81195210
+ 
+-seqorder  is a list of chromosomes in order (copy of file in ~mplace/bin/seqloc)
+
+1
+2
+3
+4
+5
+6
+7
+8
+
+If you need more than 25 chromosomes on a page, there is a copy of
+svgGenome2.pl in ~mplace/bin  in that file you can change the $rowheight to a 
+smaller number to add more rows.
+
+
+****************************************************************
+.nfs########### how to remove
+****************************************************************
+use lsof (see man pages) this lists process
+
+examle: lsof -u mplace | grep  .nfs
+this will list open .nfs files 
+then do on the returned nfs files like:
+
+ lsof  .nfs000000000d1e00c3000000b3
+
+this returns:
+sh       9985 mplace    1w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+sh       9985 mplace    2w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+grow.pl  9990 mplace    1w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+grow.pl  9990 mplace    2w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+make    15614 mplace    1w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+make    15614 mplace    2w   REG   0,29 8629981 220070083 .nfs000000000d1e00c3000000b3
+
+kill process 9985, 9990 to remove the .nfs file
+
+*************************************************************************************************************
+Condor Job trouble shooting
+*************************************************************************************************************
+The chr6 and chr8 assemblies failed because of Sunday's disk failure (I
+think).  Look in the files
+/aspen2/aditya/run2/chr6/iterate.stdout  and
+/aspen2/aditya/run2/chr8/iterate.stdout
+
+You'll see "No maps to gentig..."  near the end of the files.    After looking
+at the code and the time stamps for the files in 6.1 and 6.2 directories  for
+chr8 (5.1 and 5.2 for chr6), I surmised that when the program was listing the
+soma alignment results in the 6.1 (5.1) directory, it came up with an empty
+list.  Since the gentig input for the .2 step relies on the soma alignment
+output, it failed at this step.
+
+To recover, I did the following:
+
+1.  Determine if the condor scheduler job controling the chr6 (chr8) assembly
+is still running.
+
+a.  condor_q aditya -direct schedd    -f "%d\t" clusterID   -f "%s\n" iwd
+|sort -u
+    and find the relevant job has ID 852716.
+b.   condor_q 852716 -direct schedd    -f "%d." clusterID -f "%d\t" procid  -f
+"%s\n" iwd
+ and find the chr6 and chr8 jobs are
+
+852716.5        /aspen2/aditya/run2/chr6
+852716.7        /aspen2/aditya/run2/chr8
+
+2.  Put these jobs on hold:
+   condor_hold 852716.5 852716.7
+
+3.  Delete the .2 directories (after determining they contained no data)
+rm -rf chr8/6.2-pileAssembly
+rm -rf chr6/5.2-pileAssembly
+
+4. Release the condor jobs
+condor_release 852716.5 852716.7
+
+As you can see in the iterate.stdout log file, the program determined where to
+restart and then restarted.
+
+Check the total number of condor jobs submitted by the LAB:
+condor_status -subm
+
+find a list of lmcg lab members who are running condor jobs: 
+condor_q -f '%s\n' Owner | sort | uniq
+
+
+An example of CONDOR TROUBLESHOOTING From Steve:
+
+ There are multiple, show-stopper problems with condor. This test reveals some
+of them.
+ 
+ 1. I submit a cluster with 5 jobs, where each job simply sleeps for 5 minutes
+(Executable = /bin/sleep; Arguments = 300, with Queue 5);
+ 
+ The ClusterID assigned has previously been used by other jobs!
+
+> condor01.lmcg.wisc.edu$ condor_submit condor_job
+> 
+
+> Submitting job(s).....
+>  5 job(s) submitted to cluster 34.
+> 
+>  condor01.lmcg.wisc.edu$ condor_history 34
+>   ID OWNER SUBMITTED RUN_TIME ST COMPLETED CMD
+>   34.4 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.2 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.1 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.0 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.2 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.1 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.4 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.0 steveg 5/21 15:27 0+00:05:02 C 5/21 15:32 /bin/sleep 300
+>  condor01.lmcg.wisc.edu$
+> 
+ 2. condor_q cannot see the jobs (sometimes)!
+ 
+> condor01.lmcg.wisc.edu$ condor_q 34
+> 
+>  -- Submitter: condor01.lmcg.wisc.edu : <192.168.0.100:9618?sock=7570_cb8d>
+>  : condor01.lmcg.wisc.edu
+>   ID OWNER SUBMITTED RUN_TIME ST PRI SIZE CMD
+>  condor01.lmcg.wisc.edu$
+> 
+ 3. After I remove the jobs, they show up in the history.
+ 
+> condor01.lmcg.wisc.edu$ condor_rm 34
+>  All jobs in cluster 34 have been marked for removal
+> 
+>  condor01.lmcg.wisc.edu$ condor_history 34
+>   ID OWNER SUBMITTED RUN_TIME ST COMPLETED CMD
+>   34.4 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.2 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.1 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.0 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.4 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.2 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.1 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.0 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.2 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.1 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.4 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.0 steveg 5/21 15:27 0+00:05:02 C 5/21 15:32 /bin/sleep 300
+> 
+> 
+ 4. When I repeat the experiment, the same ClusterID is assigned!
+ 
+> condor01.lmcg.wisc.edu$ condor_submit condor_job
+>  Submitting job(s).....
+>  5 job(s) submitted to cluster 34.
+> 
+ 5. These jobs completed successfully. (Note the time stamps).
+ 
+> condor01.lmcg.wisc.edu$ condor_history 34
+>   ID OWNER SUBMITTED RUN_TIME ST COMPLETED CMD
+>   34.2 steveg 5/21 16:24 0+00:07:00 C 5/21 16:31 /bin/sleep 300
+>   34.1 steveg 5/21 16:24 0+00:07:00 C 5/21 16:31 /bin/sleep 300
+>   34.0 steveg 5/21 16:24 0+00:07:01 C 5/21 16:31 /bin/sleep 300
+>   34.4 steveg 5/21 16:24 0+00:05:03 C 5/21 16:29 /bin/sleep 300
+>   34.3 steveg 5/21 16:24 0+00:05:03 C 5/21 16:29 /bin/sleep 300
+>   34.4 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.2 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.1 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.0 steveg 5/21 16:13 0+00:00:00 X ??? /bin/sleep 300
+>   34.4 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.2 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.1 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.0 steveg 5/21 16:01 0+00:00:00 X ??? /bin/sleep 300
+>   34.3 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.2 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.1 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.4 steveg 5/21 15:27 0+00:05:03 C 5/21 15:32 /bin/sleep 300
+>   34.0 steveg 5/21 15:27 0+00:05:02 C 5/21 15:32 /bin/sleep 300
+> 
+ 6. While these jobs were running, sometimes executing "condor_q 34" returned
+a list of these jobs and sometimes it returned an empty list!
+ 
+ 
+> To see this behavior, I ran this bash loop:
+> 
+> >  condor01.lmcg.wisc.edu$ while [ 1 ] ; do condor_q 34; sleep 10; done >
+> >  condor_q.out &
+> > 
+>  and I'm attaching the output that reveals the symptom.
+
+
+************************************************************************************************************
+Basics of troubleshooting a condor Jobs on hold
+************************************************************************************************************
+check the following in order:
+1) condor_q -hold username
+2) condor_q -better-analyze job#
+3) condor_q -long job# | less
+4) get the log file from step 3 
+4) get the error file from step 3
+
+************************************************************************************************************
+REMOVE CONDOR JOBS -- USING A CONSTRAINT
+************************************************************************************************************
+In a bash shell:
+
+condor_rm $(condor_q mplace -const 'ClusterId > 924266' -f '%d\n' ClusterId |
+sort -u)
+
+(This will limit the condor_rm command to your jobs)
+
+************************************************************************************************************
+RUN MAPVIEWER LOCALLY AFTER ALTERING CODE
+************************************************************************************************************
+perl -I/exports/home/mplace/src/mapdb/lib  /exports/home/mplace/src/mapdb/bin/mapviewer.pl 
+
+/home/mplace/src/mapdb/lib/MapDB/Visualizer/Map.pm  -- map bar height can be
+changed see line:   $self->_box_coords($x, $y, $scale, $offset, $edge,$width/3),
+
+
+************************************************************************************************************
+SCP EXAMPLES:
+************************************************************************************************************
+Copy the file "foobar.txt" from a remote host to the local host
+
+    $ scp your_username@remotehost.edu:foobar.txt /some/local/directory 
+
+Copy the file "foobar.txt" from the local host to a remote host
+
+    $ scp foobar.txt your_username@remotehost.edu:/some/remote/directory 
+
+Copy the directory "foo" from the local host to a remote host's directory
+"bar"
+
+    $ scp -r foo your_username@remotehost.edu:/some/remote/directory/bar 
+
+************************************************************************************************************
+DENOVOASSEMBLY: how to run denovoassembly
+************************************************************************************************************
+1) make run dir in /aspen/denovoAssembly/mplace/
+2) get a copy of ggparam  ( run /omm/beta/germinateAndGrow.pl -h ) output
+param file to screen
+3) Get appropriate cutoff score soma param file
+4) Get /omm/etc/denovoAssembly/somaConsensus.BamHI_human.param -- will need to
+modify enzyme cut rate 
+5) after editing the soma param files and the ggparam file run 
+/omm/beta/germinateAndGrow.pl -check ggparam 
+this will check in the inputs
+6) run /omm/beta/germinateAndGrow.pl ggparam
+
+check condor_q to make sure the program is running
+
+************************************************************************************************************
+Alignment Cut Analysis (false cuts, extra cuts )
+************************************************************************************************************
+copied:   /home/steveg/bin/nMaps/calculateErrorRates.sh,
+/home/steveg/bin/nMaps/calculateErrorRates.v2.sh to my bin
+
+to run: 
+
+calculateErrorRates.v2.sh merged.xml.gz  
+outputs a file called:
+punctateIncorporationRates  
+
+NumObserved = number of punctates in the aligned nMaps ( = sum over all the
+nMaps of (number of fragments - 1))
+Missing (extra)     = number of missing (extra) punctates, calculated from the
+alignments.
+NumExpected =  NumObserved + Missing - Extra
+MissingRate (ExtraRate) =  Missing/NumExpected  (Extra/NumExpected)
+
+looks like:
+
+ Missing and Extra Cut Counts from Alignments
+
+
+                NumObserved        Missing           Extra      NumExpected	MissingRate ExtraRate
+merged.xml.gz      3865514         1682204          216646         5331072	0.316      0.041
+
+***********************************************************************************************************
+xml2loc  allow duplicates:
+/omm/beta/denovoAssembly/utils/xml2loc.pl  -allowDuplicateMaps   (or just -a works too)
+
+
+
+************************************************************************************************************
+PYTHON TIPS
+************************************************************************************************************
+start command interpreter:
+
+with open("/tmp/chr6-MHC.fasta","w") as f:
+...     for seq in SeqIO.parse("/omm/data/sequence/human_wchr-b37/chr6.fa","fasta"):
+...         f.write(str(seq.seq[:4000000]) + "\n")
+...
+outputs the first 4 million base pairs to file
+
+WAYS INSTALL PYTHON MODULES:  
+****************************
+1) easy_install <module name>
+2) easy_install -f http://pythonpaste.org/package_index.html SQLObject
+3) easy_install http://example.com/path/to/MyPackage-1.2.3.tgz
+4) easy_install /my_downloads/OtherPackage-3.2.1-py2.3.egg
+
+
+UPGRADE PYTHON MODULE:
+**********************
+ easy_install --upgrade PyProtocols
+
+
+Find local python site-packages dir:
+python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+
+**************************************************************************************************************
+DOWNLOAD LARGE FILES FROM THE WEB
+**************************************************************************************************************
+use:  
+
+ wget http://place.your.url/here
+
+or use:
+
+lwp-download [-a] <url> [<local path>] 
+
+example: 
+
+$ lwp-download http://www.perl.com/CPAN/src/latest.tar.gz
+Saving to 'latest.tar.gz'...
+11.4 MB received in 8 seconds (1.43 MB/sec)
+
+**************************************************************************************************************
+How To Perform a Flat Copy/Flat Installation from CD to Hard Drive
+**************************************************************************************************************
+
+Steps to Perform Flat Copy
+
+    Create a folder on the root of the hard drive. Use a name that follows the
+DOS 8.3 format, such as VSImage (this is not case-sensitive).
+    If the installation will be on remote or multiple computers, share this
+folder so all the clients have the minimum read permissions.
+    Insert the product CD-ROM into the CD drive. The following example uses a
+CD drive letter of "S:".
+    If the product installation CD automatically starts the Installation
+Wizard, click cancel and then exit.
+    Open a command prompt through the Start menu item, or by clicking Start,
+clicking Run, typing command and clicking OK.
+    Type the following commands, pressing ENTER after each one. (They are not
+case-sensitive.) Make appropriate changes to the drive letters and folder name
+as needed. In this case, the source (CD) drive letter is "S:", the target hard
+drive letter is "C:", and the target folder name is "VSImage".
+
+S:
+XCopy *.* C:\VSImage\ /v /s /h
+The flags are:
+
+    /v - verification
+    /s - subfolder or directories
+    /h - hidden files 
+
+For additional information on the use of the XCopy command, use the /? flag.
+
+If this process completes without errors, continue with the flat installation.
+If this processes results in errors, see "Troubleshooting."
+Perform the Flat Installation
+Install the product by executing the Setup.exe file in the C:\VSImage\ folder
+(altering the path if necessary). 
+
+**************************************************************************************************************
+R STUFF
+**************************************************************************************************************
+
+to see dirs which R is using for library (package installs)
+run:
+ .libPaths()
+
+You explicitly tell R where to get packages and where to put them.
+
+> install.packages(“graph”, lib=”/some/path/you/want”,
+> repos=”http://some.valid.package.server/whatever”)
+
+**************************************************************************************************************
+SRA DOWNLOADS sra downloads
+**************************************************************************************************************
+Get list of sra files when the sra directory number is different from the archive number:
+
+	create a list of text files with the path to the sra file
+ for i in {20364..20455}; do wget  ftp://ftp-trace.ncbi.nih.gov/sra/sra-instant/reads/ByStudy/sra/SRP/SRP020/SRP0$i/; mv index.html $i.html; done
+
+  	capture the SRR number:
+grep -o '\/SRR[0-9][0-9][0-9][0-9][0-9][0-9]\/' *.html 
+
+	output looks like:  
+20439.html:/SRR800838/
+20440.html:/SRR800839/
+20441.html:/SRR800840/
+
+	create a list of SRR######.sra to download
+grep -o '\/SRR[0-9][0-9][0-9][0-9][0-9][0-9]\/' *.html | perl -F':' -nae '$F[1] =~ s/\///g;  print $F[1];' > SRR.list  
+looks like:
+ SRR800841
+ SRR800842
+
+**************************************************************************************************************
+Copy fastq files to NCBI
+**************************************************************************************************************
+Use ftp
+
+ftp-private.ncbi.nih.gov
+
+user = sra
+pw  = they provide password at time of meta-data registration
+
+use mput or put to copy files to destination
+
+
+
+
+**************************************************************************************************************
+NGS next gen seq 
+**************************************************************************************************************
+
+ do not use bamtools as it will give you an answer even if you type in the coordinates wrong!
+
+Use samtools: 
+samtools view -c input.bam chr:start-end -- This will count all aligned maps to that region.
+
+to run on a group of files:
+
+for i in YPS1009*Rep2*.sorted.bam;  do echo $i  RDN18-1;  samtools view -c $i 12_YPS1009:455933-457732; done >> counts.txt
+
+
+
+bam2wig: Converting BAM file to WIG file:
+
+Navigate to Scarcity Server containing your BAM files.
+
+for SE, strand-specific RNA-seq data:
+
+[kmyers@scarcity-6 Bowtie2_Trimmed_Files]$ perl /opt/bifxapps/biotoolbox/scripts/bam2wig.pl --pos mid --strand --rpm --in run777.Gasch138_SynH+YE_Glu_A_TGACCA_R1_MERGED_TRIMMED.sorted.bam --out SynH+YE_Glu_A.wig
+
+This will generate two WIG files, "f" and "r" for "forward" and "reverse". 
+
+Run findreplace_WIG.pl script to change chromosome name in WIG file so it will work in MochiView
+
+http://search.cpan.org/~tjparnell/Bio-ToolBox/scripts/bam2wig.pl#TROUBLESHOOTING
+
+************************************************************************************************************
+root 
+
+to use root data analysis framework: 
+cd /home/mplace/bin/root
+source bin/thisroot.sh
+
+This had to be done to install CNVnator
+
+************************************************************************************************************
+
