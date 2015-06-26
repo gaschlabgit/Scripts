@@ -117,5 +117,20 @@ coverageAnalysis.py
 
 fixFastaName.py 
 
-		Create a new fasta file, renaming each chrom. 
+	Create a new fasta file, renaming each chrom. 
+
+coverageAnalysis.py 
+
+	Calculate Copy Number Variants using a sorted bam file.
+	Uses log2(window Count/median of count for chromosome)
+
+
+matchLinesIn2files.py
+
+	Match 2 lines in 2 files. 
+	Easy to modify to alter matching criteria.
+
+runCntrlFreec.py
+
+	Automates the use of control-freec for CNV calling.
 
