@@ -42,6 +42,12 @@ chromRoman = {  "ref|NC_001133|" : "chrI", "ref|NC_001134|" : "chrII", "ref|NC_0
            "ref|NC_001145|" : "chrXIII", "ref|NC_001146|" : "chrXIV", "ref|NC_001147|" : "chrXV",
            "ref|NC_001148|" : "chrXVI", "ref|NC_001224|" : "chrMito" } 
            
+chromDict64 = { "ref|NC_001133|[R64]" : "chr1",  "ref|NC_001134|[R64]": "chr2", "ref|NC_001135|[R64]" : "chr3",
+              "ref|NC_001136|[R64]" : "chr4", "ref|NC_001137|[R64]" : "chr5", "ref|NC_001138|[R64]" : "chr6", 
+              "ref|NC_001139|[R64]" : "chr7", "ref|NC_001140|[R64]" : "chr8", "ref|NC_001141|[R64]" : "chr9",
+              "ref|NC_001142|[R64]" : "chr10", "ref|NC_001143|[R64]" : "chr11", "ref|NC_001144|[R64]" : "chr12",
+              "ref|NC_001145|[R64]" : "chr13", "ref|NC_001146|[R64]" : "chr14", "ref|NC_001147|[R64]" : "chr15",
+              "ref|NC_001148|[R64]" : "chr16", "ref|NC_001224|[R64]" : "chr17" } 
 
 
 def main():
@@ -65,8 +71,8 @@ def main():
                 line = line.rstrip()
                 line = line.lstrip('>')
                 row  = line.split()
-                if row[0] in chromRoman:
-                    print(">%s" %( chromRoman[row[0]] ) )
+                if row[0] in chromArabic:
+                    print(">%s" %( chromArabic[row[0]] ) )
             else:
                 line = line.rstrip()
                 print(line),
