@@ -162,7 +162,7 @@ def main():
                     chrom[chrName]['pos'] = [] 
                     chrom[chrName]['logRatio'] = []
                 # count if within current window
-                elif ( int(line[3]) < endPos and int(line[3]) >= startPos ):
+                elif ( int(line[3]) <= endPos and int(line[3]) >= startPos ):
                     ctr += 1
                 # change to next window
                 else:
@@ -171,15 +171,15 @@ def main():
                     windowPos = int(line[3]) - window
                     
                     chrom[chrName]['cnt'].append(ctr)
-                    chrom[chrName]['pos'].append(windowPos)
+                    chrom[chrName]['pos'].append(startPos)
                     chrom[chrName]['logRatio'].append(0.0)
                                         
                     startPos += window
                     endPos   += window
-                    ctr       = 1
-                    while int(line[3]) > endPos:
+                    ctr       = 0
+                    while int(line[3]) >= endPos:
                         chrom[chrName]['cnt'].append(ctr)
-                        chrom[chrName]['pos'].append(windowPos + window)
+                        chrom[chrName]['pos'].append(startPos + window)
                         chrom[chrName]['logRatio'].append(0.0)
                         startPos += window
                         endPos   += window
@@ -217,7 +217,7 @@ def main():
                     ratio = 0
                 
                 if ratio == 0:
-                    logRatio = "NA"
+                    logRatio = math.log2(1)
                 else:
                     logRatio = math.log2(ratio)
                 
