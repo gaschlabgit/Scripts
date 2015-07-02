@@ -40,14 +40,41 @@ import os
 import sys
 import re
 import subprocess 
-from collections import defaultdict  
+from collections import defaultdict 
+from collections import OrderedDict 
 from statistics import median
 from statistics import stdev
 
 # key = chromosome  each value is a dict of lists, the keys are 'pos', 'cnt'  
 chrom    = defaultdict(dict)
 
+# used to convert chrom names if required
+chromDict = {  "ref|NC_001133|" : "chr1", "ref|NC_001134|" : "chr2", "ref|NC_001135|" : "chr3",
+           "ref|NC_001136|" : "chr4", "ref|NC_001137|" : "chr5", "ref|NC_001138|" : "chr6", 
+           "ref|NC_001139|" : "chr7", "ref|NC_001140|" : "chr8", "ref|NC_001141|" : "chr9",
+           "ref|NC_001142|" : "chr10", "ref|NC_001143|" : "chr11", "ref|NC_001144|" : "chr12",
+           "ref|NC_001145|" : "chr13", "ref|NC_001146|" : "chr14", "ref|NC_001147|" : "chr15",
+           "ref|NC_001148|" : "chr16", "ref|NC_001224|" : "chr17" , "ref|NC_001133|[R64]" : "chr1",
+           "ref|NC_001134|[R64]" : "chr2", "ref|NC_001135|[R64]" : "chr3",
+           "ref|NC_001136|[R64]" : "chr4", "ref|NC_001137|[R64]" : "chr5", "ref|NC_001138|[R64]" : "chr6", 
+           "ref|NC_001139|[R64]" : "chr7", "ref|NC_001140|[R64]" : "chr8", "ref|NC_001141|[R64]" : "chr9",
+           "ref|NC_001142|[R64]" : "chr10", "ref|NC_001143|[R64]" : "chr11", "ref|NC_001144|[R64]" : "chr12",
+           "ref|NC_001145|[R64]" : "chr13", "ref|NC_001146|[R64]" : "chr14", "ref|NC_001147|[R64]" : "chr15",
+           "ref|NC_001148|[R64]" : "chr16", "ref|NC_001224|[R64]" : "chr17" } 
 
+# use to print ordered result to file
+chromSet = { "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
+             "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15",
+             "chr16", "chr17" }
+             
+chromLenS288C = {"ref|NC_001133|" : 230218, "ref|NC_001134|" : 813184, "ref|NC_001135|" : 316620, "ref|NC_001136|" : 1531933, 
+"ref|NC_001137|" : 576874, "ref|NC_001138|" : 270161, "ref|NC_001139|" : 1090940, "ref|NC_001140|" : 562643, "ref|NC_001141|" : 439888, 
+"ref|NC_001142|" : 745751, "ref|NC_001143|" : 666816, "ref|NC_001144|" : 1078177, "ref|NC_001145|" : 924431, "ref|NC_001146|" : 784333, 
+"ref|NC_001147|" : 1091291, "ref|NC_001148|" : 948066, "ref|NC_001224|" : 85779, "chr1" : 230218, "chr2" : 813184, "chr3" : 316620, 
+"chr4" : 1531933, "chr5" : 576874, "chr6" : 270161, "chr7" : 1090940, "chr8" : 562643, "chr9" : 439888, "chr10" : 745751, 
+"chr11" : 666816, "chr12" : 1078177, "chr13" : 924431, "chr14" : 784333, "chr15" : 1091291, "chr16" : 948066, "chr17" : 85779 }
+
+chromLenY223  = {}
 
 
 def main():
@@ -139,6 +166,7 @@ def main():
                     ctr += 1
                 # change to next window
                 else:
+                    # need to check the position 
                     ctr += 1
                     windowPos = int(line[3]) - window
                     
@@ -149,20 +177,30 @@ def main():
                     startPos += window
                     endPos   += window
                     ctr       = 1
+                    while int(line[3]) > endPos:
+                        chrom[chrName]['cnt'].append(ctr)
+                        chrom[chrName]['pos'].append(windowPos + window)
+                        chrom[chrName]['logRatio'].append(0.0)
+                        startPos += window
+                        endPos   += window
+                        ctr       = 1
+                        
                
         # sometimes mapped reads have a chromosome named "*", get rid of those
         remove = [ key for key in chrom if key == '*']
         for key in remove:
             del chrom[key]
         
+        # Get list of chromsomes
         chromList = chrom.keys()
             
         # print file header
         print("%s\t%s\t%s\t%s\t%s\t%s" %("chr", "Startpos","EndPos", "cnt", "cnt/median", "log2(cnt/median)" ))
         
         # open file to write genomic regions that pass cutoff
-        cutOff = re.sub(r"bam", "calls", infile )
+        cutOff    = re.sub(r"bam", "calls", infile )
         cutOffout = open(cutOff, 'w' )
+        result    = {}
         
                   
         # loop through all chromosomes in dictionary
