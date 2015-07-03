@@ -41,7 +41,6 @@ import sys
 import re
 import subprocess 
 from collections import defaultdict 
-from collections import OrderedDict 
 from statistics import median
 from statistics import stdev
 
@@ -63,29 +62,29 @@ chromDict = {  "ref|NC_001133|" : "chr1", "ref|NC_001134|" : "chr2", "ref|NC_001
            "ref|NC_001148|[R64]" : "chr16", "ref|NC_001224|[R64]" : "chr17" } 
 
 # use to print ordered result to file
-chromSet = { "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
+chromSet = [ "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
              "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15",
-             "chr16", "chr17" }
+             "chr16", "chr17" ]
              
-chromLenS288C = {"ref|NC_001133|" : 230218, "ref|NC_001134|" : 813184, "ref|NC_001135|" : 316620, "ref|NC_001136|" : 1531933, 
-"ref|NC_001137|" : 576874, "ref|NC_001138|" : 270161, "ref|NC_001139|" : 1090940, "ref|NC_001140|" : 562643, "ref|NC_001141|" : 439888, 
-"ref|NC_001142|" : 745751, "ref|NC_001143|" : 666816, "ref|NC_001144|" : 1078177, "ref|NC_001145|" : 924431, "ref|NC_001146|" : 784333, 
-"ref|NC_001147|" : 1091291, "ref|NC_001148|" : 948066, "ref|NC_001224|" : 85779, "chr1" : 230218, "chr2" : 813184, "chr3" : 316620, 
-"chr4" : 1531933, "chr5" : 576874, "chr6" : 270161, "chr7" : 1090940, "chr8" : 562643, "chr9" : 439888, "chr10" : 745751, 
-"chr11" : 666816, "chr12" : 1078177, "chr13" : 924431, "chr14" : 784333, "chr15" : 1091291, "chr16" : 948066, "chr17" : 85779 }
-
-chromLenY223  = {}
-
-
 def main():
     """
-    Read in bam file, parse and count reads for each non-overlaping bin.
+    Read in bam file, parse and count reads for each non-overlaping bins.
+    For each bin calculate 
+        ratio = (count/median count for chromosome)
+        log2 of ratio
+        print to stdout: chr   Startpos   EndPos   cnt   cnt/median  log2(cnt/median)
+        
+        Write Copy number calls to file.
+        Proposed CNVs are filtered using:  
+            
+            abs(logR) > (1 + 2*chromStDev)   
+    
     """
     cmdparser = argparse.ArgumentParser(description="Calculate Copy Number Variants using a sorted bam file.",
                                         usage='%(prog)s <file.bam>' ,prog='coverageAnalysis.py'  )
     cmdparser.add_argument('-b', '--bam',    action='store',      dest='BAM',  help='bam file', metavar='') 
     cmdparser.add_argument('-w', '--win',    action='store',      dest='WIN',  help='Window size for counting reads', metavar='') 
-    cmdparser.add_argument('-c', '--cutoff', action='store',      dest='CUT',  help='CNV Cutoff Score', metavar='' )       
+    #cmdparser.add_argument('-c', '--cutoff', action='store',      dest='CUT',  help='CNV Cutoff Score', metavar='' )       
     cmdparser.add_argument('-i', '--info',   action='store_true', dest='INFO', help='Program information')
     cmdResults = vars(cmdparser.parse_args())
     
@@ -101,7 +100,7 @@ def main():
         print(" Required Parameters: -b sampleName.bam")
         print(" Optional Parameters:")
         print(" \t-w window size")
-        print(" \t-c cutoff score [Default = .6]")
+        #print(" \t-c cutoff score [Default = .6]")
         print("\n Input : Bam file")
         print(" To run:  /home/mplace/scripts/coverageAnalysis.py -b samplename.bam \n")
         print(" Output: Tab delimited table w/ columns Chrom Start End Count Count/median log2(Count/median)  ")
@@ -123,10 +122,10 @@ def main():
         window = 500          # default window size
         
     # handle CNV cutoff score 
-    if cmdResults['CUT']:
-        score = float(cmdResults['CUT'])
-    else:
-        score = 0.60
+    #if cmdResults['CUT']:
+    #    score = float(cmdResults['CUT'])
+    #else:
+    #    score = 0.60
     
     if cmdResults['BAM']:
         infile = cmdResults['BAM']   
@@ -168,7 +167,6 @@ def main():
                 else:
                     # need to check the position 
                     ctr += 1
-                    windowPos = int(line[3]) - window
                     
                     chrom[chrName]['cnt'].append(ctr)
                     chrom[chrName]['pos'].append(startPos)
@@ -200,7 +198,8 @@ def main():
         # open file to write genomic regions that pass cutoff
         cutOff    = re.sub(r"bam", "calls", infile )
         cutOffout = open(cutOff, 'w' )
-        result    = {}
+        cutOffout.write("chrom\tstart\tend\tcount\tlog2Ratio\tchromStdDev\n")
+        result    = defaultdict(list)
         
                   
         # loop through all chromosomes in dictionary
@@ -217,7 +216,7 @@ def main():
                     ratio = 0
                 
                 if ratio == 0:
-                    logRatio = math.log2(1)
+                    logRatio = math.log2(1)    # can't take the log of 0 so use 1 instead
                 else:
                     logRatio = math.log2(ratio)
                 
@@ -231,8 +230,12 @@ def main():
             for position, count, logR in zip(chrom[item]['pos'], chrom[item]['cnt'], chrom[item]['logRatio']):
                 if ( abs(logR) > (1 + 2*chromStDev) ): 
                     end = int(position) + window
-                    cutOffout.write("%s\t%s\t%s\t%s\t%s\t%s\n" %(item, int(position), end, count, logR, chromStDev) )
-                    
+                    answer = str(position) + "\t" + str(end) + "\t" + str(count) +"\t" + str(logR) + "\t" + str(chromStDev)
+                    result[chromDict[item]].append(answer) 
+        # write final calls to file in chrom order       
+        for i in chromSet:
+            for x in result[i]:
+                cutOffout.write("%s\t%s\n" %(i,x))
             
          
         cutOffout.close()
