@@ -7,7 +7,8 @@ Purpose: Use samtools to count reads in a user specified window size.
 
 Input  : bam file
  
-Output : Table where columns are chrom, start_position, end_position, count, count/median_count, log2(count/median_count)
+Output : written to stdout:  Table where columns are chrom, start_position, end_position, count, count/median_count, log2(count/median_count)
+         written to file: table of calls, where a significant call is abs(log2(count/median_count) > 1 + 2*stdev)
 
 dependencies: samtools, must be in path
 
@@ -59,7 +60,11 @@ chromDict = {  "ref|NC_001133|" : "chr1", "ref|NC_001134|" : "chr2", "ref|NC_001
            "ref|NC_001139|[R64]" : "chr7", "ref|NC_001140|[R64]" : "chr8", "ref|NC_001141|[R64]" : "chr9",
            "ref|NC_001142|[R64]" : "chr10", "ref|NC_001143|[R64]" : "chr11", "ref|NC_001144|[R64]" : "chr12",
            "ref|NC_001145|[R64]" : "chr13", "ref|NC_001146|[R64]" : "chr14", "ref|NC_001147|[R64]" : "chr15",
-           "ref|NC_001148|[R64]" : "chr16", "ref|NC_001224|[R64]" : "chr17" } 
+           "ref|NC_001148|[R64]" : "chr16", "ref|NC_001224|[R64]" : "chr17", 
+           "chr1" : "chr1", "chr2" : "chr2", "chr3" : "chr3", "chr4" : "chr4", "chr5" : "chr5", "chr6" : "chr6", 
+           "chr7" : "chr7", "chr8" : "chr8", "chr9" : "chr9", "chr10" : "chr10", "chr11" : "chr11", 
+           "chr12" : "chr12", "chr13" : "chr13", "chr14" : "chr14", "chr15" : "chr15", "chr16" : "chr16", 
+           "chr17" : "chr17"  } 
 
 # use to print ordered result to file
 chromSet = [ "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
@@ -75,9 +80,7 @@ def main():
         print to stdout: chr   Startpos   EndPos   cnt   cnt/median  log2(cnt/median)
         
         Write Copy number calls to file.
-        Proposed CNVs are filtered using:  
-            
-            abs(logR) > (1 + 2*chromStDev)   
+        Proposed CNVs are filtered using:    abs(logR) > (1 + 2*chromStDev)   
     
     """
     cmdparser = argparse.ArgumentParser(description="Calculate Copy Number Variants using a sorted bam file.",
