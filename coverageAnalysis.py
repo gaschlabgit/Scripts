@@ -169,22 +169,24 @@ def main():
                 # change to next window
                 else:
                     # need to check the position 
-                    ctr += 1
-                    
-                    chrom[chrName]['cnt'].append(ctr)
-                    chrom[chrName]['pos'].append(startPos)
-                    chrom[chrName]['logRatio'].append(0.0)
-                                        
-                    startPos += window
-                    endPos   += window
-                    ctr       = 0
-                    while int(line[3]) >= endPos:
+                    if int(line[3]) > endPos:
+                        while int(line[3]) > endPos:
+                            chrom[chrName]['cnt'].append(ctr)
+                            chrom[chrName]['pos'].append(startPos + window)
+                            chrom[chrName]['logRatio'].append(0.0)
+                            startPos += window
+                            endPos   += window
+                            ctr       = 0
+                    else:
+                        ctr += 1                    
                         chrom[chrName]['cnt'].append(ctr)
-                        chrom[chrName]['pos'].append(startPos + window)
-                        chrom[chrName]['logRatio'].append(0.0)
+                        chrom[chrName]['pos'].append(startPos)
+                        chrom[chrName]['logRatio'].append(0.0)                                        
                         startPos += window
                         endPos   += window
-                        ctr       = 1
+                        ctr       = 0
+                    #
+                        
                         
                
         # sometimes mapped reads have a chromosome named "*", get rid of those
@@ -229,7 +231,7 @@ def main():
                 # write results to stdout
                 print("%s\t%s\t%s\t%s\t%s\t%s" %(item, int(position), end, count, ratio, logRatio  ) )
             chromStDev = stdev(logList)
-            
+            # make final copy number calls here
             for position, count, logR in zip(chrom[item]['pos'], chrom[item]['cnt'], chrom[item]['logRatio']):
                 if ( abs(logR) > (1 + 2*chromStDev) ): 
                     end = int(position) + window
