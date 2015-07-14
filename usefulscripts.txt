@@ -332,6 +332,26 @@ sudo su -
 
  yum install git-core
 
+***********************************************************************************************************************************
+PERL extend the library path  (see http://www.perlhowto.com/extending_the_library_path )
+***********************************************************************************************************************************
+Get perl lib paths:    perl -le  'print foreach @INC'
+
+one way: 
+
+# unix, bourne shell
+PERL5LIB=/home/path/lib:/usr/another/path/lib; export PERL5LIB
+
+another way:
+perl -I /home/path/lib -I /usr/another/lib script.pl
+
+another way in the perl script:
+
+#!/usr/bin/perl
+use lib "/home/path/lib";
+use lib "/usr/another/lib";
+ 
+use MyCustomModule;
 
 
 ***********************************************************************************************************************************
@@ -415,6 +435,13 @@ Insert header line as first line in a list of file:
 print all words on line as a column (list)
 	cat list | sed 's/\s/\n/g'
 
+Concatenate the file name to each fasta sequence in a fasta file:
+	sed -e "/^>C*/ s/$/:YJM1444/" YJM1444-genes.fasta > check
+ BATCH MODE:
+	for i in *-genes.fasta; do sed -e "/^>C*/ s/$/:${i%-genes\.fasta}/" $i ; done
+
+
+
 Loop through a file line by line and do something (Bash)
 
    while read line; do echo $line; done < input.txt
@@ -497,6 +524,16 @@ Concatenate files including the file names as headers:
  for f in *_HTseqOutput.txt; do echo $f; cat $f;  done >> check.txt
 
 
+Randomly sample lines in file:
+
+sort -R input.txt   > random.txt   -- sort is a unix cmd line utility, randomly sorts the file
+
+split -l 120 random.txt  outPrefix -- is will divide the input files into x number of file w/ 120 lines. 
+
+
+REFORMAT text file (change wrap) via command line (fold)
+	
+	fold -w 60 ref_NC_001140__new.fa > chr8_no_cup1-2.fa  
 
 ***************************************************************************************************************
 NANOCODING BASH examples
