@@ -59,30 +59,20 @@ class interact( object ):
         for item in self.geneList:
             result = self.queryYM(item, level="level1" )
         
-        for d in result:
-            if re.findall('\\b'+"level"+'\\b',d[0]):
-                continue
-            else:
-                if d[11] in self.geneInteractions:
-                    print d[11]
-                    if d[11] in count:
-                        continue
-                    else:
-                        count[d[11]] = 1
-                        result += self.queryYM( d[11], level="level2")
-                #    result += resultlevel2
-        header =  "level", "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",\
-               "organism.shortName", "interactions.details.annotationType",\
-               "interactions.details.phenotype", "interactions.details.role1", \
-               "interactions.details.experimentType", "interactions.participant2.symbol",\
-               "interactions.participant2.secondaryIdentifier", "interactions.details.experiment.name", \
-               "interactions.details.relationshipType"
-        headerList = list(header)
-        
-        for line in result:
-            print line
-      
-    
+            for d in result:
+                if re.findall('\\b'+"level"+'\\b',d[0]):
+                    continue
+                else:
+                    if d[11] in self.geneInteractions:
+                        if d[11] in count:
+                            continue
+                        else:
+                            count[d[11]] = 1
+                            result += self.queryYM( d[11], level="level2")
+            # write results to file
+            self.writeTable( result, item )
+                        
+   
     def queryYM( self, geneName, level ):
         """
         Use Yeastmine API to look for gene interactions.
@@ -116,12 +106,30 @@ class interact( object ):
         
         return result
     
-    def writeTable( self, level ):
+    def writeTable( self, table, gene ):
         """
         Write Yeastmine gene interaction query results to text file.
         level = indicates the depth of search
         """
-        pass
+        header =  "level", "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",\
+               "organism.shortName", "interactions.details.annotationType",\
+               "interactions.details.phenotype", "interactions.details.role1", \
+               "interactions.details.experimentType", "interactions.participant2.symbol",\
+               "interactions.participant2.secondaryIdentifier", "interactions.details.experiment.name", \
+               "interactions.details.relationshipType"
+        headerList = list(header)
+        outFile    = gene + "-" + "interactions.txt"
+        
+        with open(outFile, 'w') as out:
+            out.write( "\t".join(headerList) )
+            out.write("\n")
+            for line in table:
+                line = [ "None" if x is None else x for x in line ]
+                out.write( "\t".join(line))
+                out.write( "\n" )
+        
+        
+        
     
     def findInteractions( targetGenes, geneTable ):
         """
