@@ -54,21 +54,21 @@ class interact( object ):
         """
         Run through gene name list to query interactions from yeastmine.
         """
-        count = {}
+        #count = {}
         
         for item in self.geneList:
             result = self.queryYM(item, level="level1" )
         
-            for d in result:
-                if re.findall('\\b'+"level"+'\\b',d[0]):
-                    continue
-                else:
-                    if d[11] in self.geneInteractions:
-                        if d[11] in count:
-                            continue
-                        else:
-                            count[d[11]] = 1
-                            result += self.queryYM( d[11], level="level2")
+            #for d in result:
+            #    if re.findall('\\b'+"level"+'\\b',d[0]):
+            #        continue
+            #    else:
+            #        if d[11] in self.geneInteractions:
+            #            if d[11] in count:
+            #                continue
+            #            else:
+            #                count[d[11]] = 1
+            #                result += self.queryYM( d[11], level="level2")
             # write results to file
             self.writeTable( result, item )
                         
@@ -128,9 +128,6 @@ class interact( object ):
                 out.write( "\t".join(line))
                 out.write( "\n" )
         
-        
-        
-    
     def findInteractions( targetGenes, geneTable ):
         """
         targetGenes = secondary genes used to search list of genes 
@@ -158,10 +155,8 @@ class interact( object ):
         """
         return self.file
     
-
 def main():
     """
-    
     """
     # HANDLE COMMAND LINE ARGS
     cmdparser = argparse.ArgumentParser( description="Query SGD Yeastmine with a list of gene names.", prog='yeastmain.py' )
@@ -201,7 +196,6 @@ def main():
        print " help(yeastmine)\n"
        sys.exit(1)
    
-   
    # check that input file exists
     if cmdResults['FILE'] is not None:
         inFile = cmdResults['FILE'] 
@@ -211,17 +205,7 @@ def main():
             sys.exit(1)
     
     data = interact( inFile )
-    
     data.callQueryYM(  )
             
-
-
-    
-   
-    
-    
-        
-
-
 if __name__ == "__main__":
     main()
