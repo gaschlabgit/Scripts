@@ -16,7 +16,6 @@ OUTPUT: Produces a tab delimited text file for each gene.
         level1 table info for primary gene
         level2 table info for secondary genes
         
-
 Yeastmine:  http://yeastmine.yeastgenome.org/yeastmine/begin.do
 
 AUTHOR: Mike Place
@@ -25,6 +24,7 @@ DATE: 7/16/2015
 """
 import argparse
 import os
+import re
 import sys
 from intermine.webservice import Service
 service = Service("http://yeastmine.yeastgenome.org/yeastmine/service")
@@ -35,7 +35,6 @@ class interact( object ):
     file = input file 
     dir = current working directory
     geneList = List of genes for level1 query.
-    
     """
     def __init__( self, inFile ):
         """
@@ -49,17 +48,31 @@ class interact( object ):
             for line in f:
                 ln = line.strip('\r\n\s')
                 self.geneList.append(ln)
+        
+    def callQueryYM( self ):
+        """
+        Run through gene name list to query interactions from yeastmine.
+        """
+        for item in self.geneList:
+            result = self.queryYM(item, level="level1" )
+        
+        regex = re.compile(r"\slevel\s")        
+        
+        for d in result:
+            print d
+            
     
-    def queryYM( self, geneName ):
+    def queryYM( self, geneName, level ):
         """
         Use Yeastmine API to look for gene interactions.
         """
-        for geneName in names:
+        result = []        
+            
     # Get a new query on the table to query
-            query = service.new_query("Gene")
-            query.add_constraint("interactions.participant2", "Gene")    
-        
-            query.add_view(   "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",
+        query = service.new_query("Gene")
+        query.add_constraint("interactions.participant2", "Gene")    
+           
+        query.add_view(   "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",
                        "organism.shortName", "interactions.details.annotationType",
                        "interactions.details.phenotype", "interactions.details.role1",
                        "interactions.details.experimentType", "interactions.participant2.symbol",
@@ -67,31 +80,29 @@ class interact( object ):
                        "interactions.details.experiment.name",
                        "interactions.details.relationshipType"    )
     
-            query.add_constraint("organism.shortName", "=", "S. cerevisiae", code = "B")
-            query.add_constraint("Gene", "LOOKUP", geneName, code = "A")
+        query.add_constraint("organism.shortName", "=", "S. cerevisiae", code = "B")
+        query.add_constraint("Gene", "LOOKUP", geneName, code = "A")
     
-            print "primaryIdentifier\tsymbol\tsecondaryIdentifier\tsgdAlias\tname\t\
-               organism.shortName\tinteractions.details.annotationType\t\
-               interactions.details.phenotype\tinteractions.details.role1\t\
-               interactions.details.experimentType\tinteractions.participant2.symbol\t\
-               interactions.participant2.secondaryIdentifier\tinteractions.details.experiment.name\t\
-               interactions.details.relationshipType"
+        header =  "level", "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",\
+               "organism.shortName", "interactions.details.annotationType",\
+               "interactions.details.phenotype", "interactions.details.role1", \
+               "interactions.details.experimentType", "interactions.participant2.symbol",\
+               "interactions.participant2.secondaryIdentifier", "interactions.details.experiment.name", \
+               "interactions.details.relationshipType"
+        headerList = list(header)
+        result.append(headerList)
     
-            for row in query.rows():
-                data = row["primaryIdentifier"], row["symbol"], row["secondaryIdentifier"], row["sgdAlias"], \
+        for row in query.rows():
+            data = level, row["primaryIdentifier"], row["symbol"], row["secondaryIdentifier"], row["sgdAlias"], \
                 row["name"], row["organism.shortName"], row["interactions.details.annotationType"], \
                 row["interactions.details.phenotype"], row["interactions.details.role1"], \
                 row["interactions.details.experimentType"], row["interactions.participant2.symbol"], \
                 row["interactions.participant2.secondaryIdentifier"], \
                 row["interactions.details.experiment.name"], row["interactions.details.relationshipType"]
-                item = list(data)
-                result.append(item)
-            
-            for d in result:
-                for i in d:
-                    print "%s\t" %(i),
-                print ""
-    
+            item = list(data)
+            result.append(item)    
+        
+        return result
     
     def writeTable( self, level ):
         """
@@ -160,14 +171,14 @@ def main():
        print " "
        print " Trey's genes are: ISU1, HOG1, GSH1, GRE3, IRA2, SAP190 "       
         
-       print "\n  Usage  : yeastmine.py -f "
+       print "\n  Usage  : yeastmine.py -f genelist.txt"
        print "  "       
        print "\tTo see Python Docs for this program:"
-       print "\tOpen python console and enter"
+       print "\tOpen python (version 2.7) console and enter"
        print " import sys"
        print " sys.path.append('/path/to/yeastmine.py') "
        print " import yeastmine"
-       print " help(yeastmine)"
+       print " help(yeastmine)\n"
        sys.exit(1)
    
    
@@ -179,12 +190,9 @@ def main():
             cmdparser.print_help()
             sys.exit(1)
     
-   
-        
-        
-    
     data = interact( inFile )
     
+    data.callQueryYM(  )
             
 
 
