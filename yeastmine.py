@@ -27,7 +27,6 @@ DATE: 7/16/2015
 """
 import argparse
 import os
-import re
 import sys
 from intermine.webservice import Service
 service = Service("http://yeastmine.yeastgenome.org/yeastmine/service")
@@ -59,6 +58,7 @@ class interact( object ):
         #self.geneInteractions = [ 'ISU1', 'HOG1', 'GSH1', 'GRE3', 'IRA2', 'SAP190' ]
         self.geneInteractions = [ 'YPL135W', 'YLR113W', 'YJL101C', 'YHR104W', 'YOL081W', 'YKR028W' ]
         self.targets          = {}     
+        self.secondaryTargets = {}  # key = Trey's genes, value = list of secondary interactors 
         
         with open( self.file ) as f:
             for line in f:
@@ -67,6 +67,22 @@ class interact( object ):
         
         for gene in self.geneInteractions:
             self.targets[gene] = self.queryYM(gene, level="level2")
+            self.writeTable( self.targets[gene], gene )
+        
+        self.toListSecondary()
+    
+    def toListSecondary( self ):
+        """
+        Store list of secondary targets gene names for Trey's genes in dictonary
+        """
+        for k, v in self.targets.items():
+            geneNames = [ x[12] for x in v ]
+            print len(geneNames)
+            print k
+            print " "
+            print geneNames
+            print " "
+        
         
     def callQueryYM( self ):
         """
@@ -75,49 +91,38 @@ class interact( object ):
         matchFile = open('gene-interaction-match.txt', 'w')
         
         for item in self.geneList:
-            result = self.queryYM(item, level="level1" )
-            self.writeTable( result, item )
+            result = self.queryYM(item, level="level1" )        # query yeastmine for known interactions
+            self.writeTable( result, item )                     
             
             #Get systemic name from Yeastmine query
-            sysName = result[2][3]
-            print "sysName %s" %( sysName )
+            if len(result) == 0:
+                print "No YeastMine results for %s" %(item)
+                continue
+            else:
+                sysName = result[2][3]
             
             # MATCH Trey's genes to current interaction table
             # 1st get a unique list of genes in result
-            keyList = [ x[12] for x in result ] 
-            uniqueKey = sorted(set(keyList))            
+                keyList = [ x[12] for x in result ] 
+                uniqueKey = sorted(set(keyList))            
             
-            print "Processing %s\t%s" %(item, sysName)
-            # loop through genes matched by first Yeastmine query
-            for line in uniqueKey:
+                print "Processing %s\t%s" %(item, sysName)
+                # loop through genes matched by first Yeastmine query
+                for line in uniqueKey:
                 # Is this gene in the list of Trey's genes
-                if line in self.geneInteractions:
-                    print "%s\t%s\t%s" %(item, line, sysName)                    
+                    if line in self.geneInteractions:
+                        print "     Found line %s\t%s\t%s" %(line,  item, sysName)                    
                     # loop through the Trey gene Yeastmine query results and get lines that have an interaction
-                    for trgt in self.targets[line]:
-                        if trgt[12] == sysName:
-                            trgt = [ "None" if x is None else x for x in trgt]
-                            print "\t".join(trgt)
+                        for trgt in self.targets[line]:
+                            if trgt[12] == sysName:
+                                trgt = [ "None" if x is None else x for x in trgt]
+                                matchFile.write( "\t".join(trgt) + "\n" )
+                # NEED TO MATCH THE SECONDARY ACTORS BETWEEN TREY"S GENES AND QUERY RESULTS
+                
 
-
-                        #    trgt = [ "None" if x is None else x for x in line ]
-                        #    print "\t".join(trgt)
-                    
             keyList = []
-            #for d in result:
-            #    if re.findall('\\b'+"level"+'\\b',d[0]):
-            #        continue
-            #    else:
-            #        if d[11] in self.geneInteractions:
-            #            if d[11] in count:
-            #                continue
-            #            else:
-            #                count[d[11]] = 1
-            #                result += self.queryYM( d[11], level="level2")
-            # write results to file
-            
-                        
-   
+        matchFile.close()
+          
     def queryYM( self, geneName, level ):
         """
         Use Yeastmine API to look for gene interactions.
@@ -250,7 +255,7 @@ def main():
             sys.exit(1)
     
     data = interact( inFile )
-    data.callQueryYM(  )
+    #data.callQueryYM(  )
             
 if __name__ == "__main__":
     main()
