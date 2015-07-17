@@ -16,6 +16,9 @@ OUTPUT: Produces a tab delimited text file for each gene.
         level1 table info for primary gene
         level2 table info for secondary genes
         
+        Also creates one table listing the matched interactions
+        between genes that match from the first query to Trey's genes.
+        
 Yeastmine:  http://yeastmine.yeastgenome.org/yeastmine/begin.do
 
 AUTHOR: Mike Place
@@ -32,33 +35,75 @@ service = Service("http://yeastmine.yeastgenome.org/yeastmine/service")
 class interact( object ):
     """
     Automate the querying of Yeast mine using a list of genes.
-    file = input file 
-    dir = current working directory
+    file     = input file 
+    dir      = current working directory
     geneList = List of genes for level1 query.
+    targets  = dictionary for each of the target genes , key = geneName from geneInteractions list
+               value = list of lists table from YeastMine
+               
+               for k,v in self.targets.items():
+                   print k
+                   for l in v:
+                       print l
+                       print "\n"
+    SGD names for Trey's genes: 
+    ISU1 = YPL135W, HOG1 = YLR113W, GSH1 = YJL101C, GRE3 = YHR104W, IRA2 = YOL081W, SAP190 = YKR028W
     """
     def __init__( self, inFile ):
         """
         Initialize interact object
         """
-        self.file = inFile
-        self.dir  = os.getcwd()
-        self.geneList = []    # list of genes to query
-        self.geneInteractions = [ 'ISU1', 'HOG1', 'GSH1', 'GRE3', 'IRA2', 'SAP190' ]
+        self.file             = inFile
+        self.dir              = os.getcwd()
+        self.geneList         = []    # list of genes to query
+        #self.geneInteractions = [ 'ISU1', 'HOG1', 'GSH1', 'GRE3', 'IRA2', 'SAP190' ]
+        self.geneInteractions = [ 'YPL135W', 'YLR113W', 'YJL101C', 'YHR104W', 'YOL081W', 'YKR028W' ]
+        self.targets          = {}     
         
         with open( self.file ) as f:
             for line in f:
                 ln = line.strip('\r\n\s')
                 self.geneList.append(ln)
         
+        for gene in self.geneInteractions:
+            self.targets[gene] = self.queryYM(gene, level="level2")
+        
     def callQueryYM( self ):
         """
         Run through gene name list to query interactions from yeastmine.
         """
-        #count = {}
+        matchFile = open('gene-interaction-match.txt', 'w')
         
         for item in self.geneList:
             result = self.queryYM(item, level="level1" )
-        
+            self.writeTable( result, item )
+            
+            #Get systemic name from Yeastmine query
+            sysName = result[2][3]
+            print "sysName %s" %( sysName )
+            
+            # MATCH Trey's genes to current interaction table
+            # 1st get a unique list of genes in result
+            keyList = [ x[12] for x in result ] 
+            uniqueKey = sorted(set(keyList))            
+            
+            print "Processing %s\t%s" %(item, sysName)
+            # loop through genes matched by first Yeastmine query
+            for line in uniqueKey:
+                # Is this gene in the list of Trey's genes
+                if line in self.geneInteractions:
+                    print "%s\t%s\t%s" %(item, line, sysName)                    
+                    # loop through the Trey gene Yeastmine query results and get lines that have an interaction
+                    for trgt in self.targets[line]:
+                        if trgt[12] == sysName:
+                            trgt = [ "None" if x is None else x for x in trgt]
+                            print "\t".join(trgt)
+
+
+                        #    trgt = [ "None" if x is None else x for x in line ]
+                        #    print "\t".join(trgt)
+                    
+            keyList = []
             #for d in result:
             #    if re.findall('\\b'+"level"+'\\b',d[0]):
             #        continue
@@ -70,7 +115,7 @@ class interact( object ):
             #                count[d[11]] = 1
             #                result += self.queryYM( d[11], level="level2")
             # write results to file
-            self.writeTable( result, item )
+            
                         
    
     def queryYM( self, geneName, level ):
