@@ -28,6 +28,7 @@ DATE: 7/16/2015
 import argparse
 import os
 import sys
+from collections import defaultdict
 from intermine.webservice import Service
 service = Service("http://yeastmine.yeastgenome.org/yeastmine/service")
 
@@ -55,10 +56,18 @@ class interact( object ):
         self.file             = inFile
         self.dir              = os.getcwd()
         self.geneList         = []    # list of genes to query
-        #self.geneInteractions = [ 'ISU1', 'HOG1', 'GSH1', 'GRE3', 'IRA2', 'SAP190' ]
+        self.treyGene = { 'YPL135W':'ISU1', 'YLR113W':'HOG1', 'YJL101C':'GSH1', 'YHR104W':'GRE3', 'YOL081W':'IRA2', 'YKR028W':'SAP190' }
         self.geneInteractions = [ 'YPL135W', 'YLR113W', 'YJL101C', 'YHR104W', 'YOL081W', 'YKR028W' ]
         self.targets          = {}     
-        self.secondaryTargets = {}  # key = Trey's genes, value = list of secondary interactors 
+        self.secondaryTargets = defaultdict(dict)  # key = trey's gene, secondary dict = gene interactor value = 1 
+        # header for output file
+        self.header =  "level", "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",\
+               "organism.shortName", "interactions.details.annotationType",\
+               "interactions.details.phenotype", "interactions.details.role1", \
+               "interactions.details.experimentType", "interactions.participant2.symbol",\
+               "interactions.participant2.secondaryIdentifier", "interactions.details.experiment.name", \
+               "interactions.details.relationshipType"
+        self.headerList = list(self.header)
         
         with open( self.file ) as f:
             for line in f:
@@ -66,62 +75,90 @@ class interact( object ):
                 self.geneList.append(ln)
         
         for gene in self.geneInteractions:
-            self.targets[gene] = self.queryYM(gene, level="level2")
+            self.targets[gene] = self.queryYM(gene, level="level1")
             self.writeTable( self.targets[gene], gene )
         
+        # Get list of targest for Trey's genes
         self.toListSecondary()
     
     def toListSecondary( self ):
         """
-        Store list of secondary targets gene names for Trey's genes in dictonary
+        Store list of interactor target gene names for Trey's genes in dictonary
         """
         for k, v in self.targets.items():
             geneNames = [ x[12] for x in v ]
-            print len(geneNames)
-            print k
-            print " "
-            print geneNames
-            print " "
-        
+            uniqueGeneNames = sorted(set(geneNames))
+            for n in uniqueGeneNames:
+                if n in self.secondaryTargets[k]:
+                    continue
+                else:
+                    self.secondaryTargets[k][n] = 1
         
     def callQueryYM( self ):
         """
         Run through gene name list to query interactions from yeastmine.
         """
         matchFile = open('gene-interaction-match.txt', 'w')
-        
+        matchFile.write( "\t".join(self.headerList) )           # print header
+        matchFile.write("\n")
+        self.writeHeader()
+                
         for item in self.geneList:
             result = self.queryYM(item, level="level1" )        # query yeastmine for known interactions
             self.writeTable( result, item )                     
             
-            #Get systemic name from Yeastmine query
-            if len(result) == 0:
+            if len(result) == 0:                                # get systemic name for query
                 print "No YeastMine results for %s" %(item)
                 continue
             else:
                 sysName = result[2][3]
-            
             # MATCH Trey's genes to current interaction table
             # 1st get a unique list of genes in result
                 keyList = [ x[12] for x in result ] 
                 uniqueKey = sorted(set(keyList))            
             
-                print "Processing %s\t%s" %(item, sysName)
+                print "Processing %s\t%s" %(item, sysName)     # inform user of progress
+                                
                 # loop through genes matched by first Yeastmine query
                 for line in uniqueKey:
                 # Is this gene in the list of Trey's genes
-                    if line in self.geneInteractions:
-                        print "     Found line %s\t%s\t%s" %(line,  item, sysName)                    
+                    if line in self.geneInteractions:                  
                     # loop through the Trey gene Yeastmine query results and get lines that have an interaction
                         for trgt in self.targets[line]:
                             if trgt[12] == sysName:
                                 trgt = [ "None" if x is None else x for x in trgt]
                                 matchFile.write( "\t".join(trgt) + "\n" )
-                # NEED TO MATCH THE SECONDARY ACTORS BETWEEN TREY"S GENES AND QUERY RESULTS
-                
+                # Is there a match for interactor genes between Trey's genes & gene list result for item (gene name from input list)
+                inCommon = []                
+                for k,v in self.secondaryTargets.items():
+                    fileName = self.treyGene[k] + "-GenesinCommon.txt"
+                    with open( fileName, 'a') as out:
+                         for r in uniqueKey:
+                             if r in v:
+                                 inCommon = self.queryYM( r, "level2" )
+                                 for ln in inCommon:
+                                     ln = [ "None" if x is None else x for x in ln ]
+                                     out.write( "%s\t%s\t" %( self.treyGene[k], item ) )                                    
+                                     out.write( "\t".join(ln))
+                                     out.write( "\n" )
+                                     inCommon = []
 
             keyList = []
         matchFile.close()
+    
+    def writeHeader( self ):
+        """
+        Write header for genes in common files
+        """
+        for k in self.secondaryTargets.keys():
+            fileName = self.treyGene[k] + "-GenesinCommon.txt" 
+            with open( fileName, 'w' ) as out:
+                out.write("%s\t%s\t" %("Gene_trey", "Gene_incommon" ))
+                out.write
+                out.write( "\t".join(self.headerList) )
+                out.write("\n")
+                out.close()                        
+                
           
     def queryYM( self, geneName, level ):
         """
@@ -129,7 +166,7 @@ class interact( object ):
         """
         result = []        
             
-    # Get a new query on the table to query
+    # Get a new query on the table
         query = service.new_query("Gene")
         query.add_constraint("interactions.participant2", "Gene")    
            
@@ -161,17 +198,10 @@ class interact( object ):
         Write Yeastmine gene interaction query results to text file.
         level = indicates the depth of search
         """
-        header =  "level", "primaryIdentifier", "symbol", "secondaryIdentifier", "sgdAlias", "name",\
-               "organism.shortName", "interactions.details.annotationType",\
-               "interactions.details.phenotype", "interactions.details.role1", \
-               "interactions.details.experimentType", "interactions.participant2.symbol",\
-               "interactions.participant2.secondaryIdentifier", "interactions.details.experiment.name", \
-               "interactions.details.relationshipType"
-        headerList = list(header)
         outFile    = gene + "-" + "interactions.txt"
         
         with open(outFile, 'w') as out:
-            out.write( "\t".join(headerList) )
+            out.write( "\t".join(self.headerList) )
             out.write("\n")
             for line in table:
                 line = [ "None" if x is None else x for x in line ]
@@ -255,7 +285,7 @@ def main():
             sys.exit(1)
     
     data = interact( inFile )
-    #data.callQueryYM(  )
+    data.callQueryYM(  )
             
 if __name__ == "__main__":
     main()
