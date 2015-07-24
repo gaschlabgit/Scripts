@@ -134,3 +134,8 @@ runCntrlFreec.py
 
 	Automates the use of control-freec for CNV calling.
 
+parseBlastn.py
+
+	Use BioPython to parse Blastn xml results files.
+
+
