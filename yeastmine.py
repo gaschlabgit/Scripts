@@ -28,6 +28,7 @@ DATE: 7/16/2015
 import argparse
 import os
 import sys
+import yeast_Gene_name_to_ORF
 from collections import defaultdict
 from intermine.webservice import Service
 service = Service("http://yeastmine.yeastgenome.org/yeastmine/service")
@@ -129,19 +130,19 @@ class interact( object ):
                                 trgt = [ "None" if x is None else x for x in trgt]
                                 matchFile.write( "\t".join(trgt) + "\n" )
                 # Is there a match for interactor genes between Trey's genes & gene list result for item (gene name from input list)
-                inCommon = []                
+                #inCommon = []                
                 for k,v in self.secondaryTargets.items():
                     fileName = self.treyGene[k] + "-GenesinCommon.txt"
                     with open( fileName, 'a') as out:
                          for r in uniqueKey:
                              if r in v:
-                                 inCommon = self.queryYM( r, "level2" )
-                                 for ln in inCommon:
-                                     ln = [ "None" if x is None else x for x in ln ]
-                                     out.write( "%s\t%s\t" %( self.treyGene[k], item ) )                                    
-                                     out.write( "\t".join(ln))
-                                     out.write( "\n" )
-                                     inCommon = []
+                                 #inCommon = self.queryYM( r, "level2" )
+                                 #for ln in inCommon:
+                                 #    ln = [ "None" if x is None else x for x in ln ]
+                                 out.write( "%s\t%s\t%s" %( self.treyGene[k], yeast_Gene_name_to_ORF.orfToGene[item], yeast_Gene_name_to_ORF.orfToGene[r] ) )                                    
+                                     #out.write( "\t".join(ln))
+                                 out.write( "\n" )
+                                    # inCommon = []
 
             keyList = []
         matchFile.close()
@@ -153,10 +154,7 @@ class interact( object ):
         for k in self.secondaryTargets.keys():
             fileName = self.treyGene[k] + "-GenesinCommon.txt" 
             with open( fileName, 'w' ) as out:
-                out.write("%s\t%s\t" %("Gene_trey", "Gene_incommon" ))
-                out.write
-                out.write( "\t".join(self.headerList) )
-                out.write("\n")
+                out.write("%s\t%s\t%s\n" %("Gene_trey", "Gene", "Gene_inCommon" ))
                 out.close()                        
                 
           
