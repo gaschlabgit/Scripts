@@ -14,11 +14,8 @@ Created on Fri Jul 24 15:06:07 2015
 @Dependencies:  python 2.7
 
 Bio.Blast.Record.HSP
-
 Stores information about one hsp in an alignment hit.
-
 Members:
-
         score BLAST score of hit. (float)
         bits Number of bits for that score. (float)
         expect Expect value. (float)
@@ -36,8 +33,6 @@ Members:
         sbjct The sbjct sequence.
         sbjct_start The start residue for the sbjct sequence. (1-based)
         sbjct_end The end residue for the sbjct sequence. (1-based)
-
-
 """
 import argparse
 import sys
@@ -67,22 +62,24 @@ def main():
     if cmdResults['FILE']:
         inFile = cmdResults['FILE']
 
+    # Get list of blast xml files to process.
     with open(inFile,'r') as data:
         for item in data:
             files.append(item.rstrip())
+
+    print "query\tref_seq\te-value\tblast_score\tbits\talign-length\tidentities\tgaps"
+    
     
     for xmlFile in files:
         for record in NCBIXML.parse( open(xmlFile) ):
             if record.alignments:
-                print "QUERY: %s" % record.query[:60]
+                qline = record.query[:60].split()
                 for align in record.alignments:
+                    title = align.title.split()
                     for hsp in align.hsps:
-                        print "bits %s" % hsp.bits 
-                        print hsp.expect
-                        print hsp.score
-                        print hsp.identities
-                        print hsp.gaps
-        
+                        print "%s\t%s\t%e\t%f\t%f\t%d\t%d\t%d" %( qline[0], title[1], hsp.expect, hsp.score, hsp.bits, hsp.align_length, hsp.identities, hsp.gaps)
+                        
+
         
             
     
