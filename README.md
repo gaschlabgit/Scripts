@@ -138,4 +138,7 @@ parseBlastn.py
 
 	Use BioPython to parse Blastn xml results files.
 
+extractGene.py
+	
+	Extract sequence plus window from genome assembly
 
