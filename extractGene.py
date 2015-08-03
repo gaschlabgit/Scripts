@@ -10,14 +10,16 @@
             something like :
                 >yjm1252.ORF1 yjm1252_Chr05 6747-7661
                 
-                fasta files are assumed to be name  sample.fa
+                fasta files name format =  sample.fa
+                Assembly file are assumed to be in a different dir
+                and named the same way, 
                 
          2) Directory where sequence assemblies are located. Sequence Assemblies
             are assumed to have been indexed with samtools.
              example: samtools faidx sample.fa 
          
-         3) Window around cds to extract from assembly, 1000 means 1000 base
-            pairs up & down stream of cds start and stop position.
+         3) Window around cds to extract from assembly, 1000 = 1000 base pairs 
+            up & down stream of cds start and stop position.
          
 @Dependencies: 
         Python 3, 
@@ -64,36 +66,38 @@ def processFiles( files, assemblyDir, window ):
     Loop through the cds files, get list of regions to extract for each file
     then call extract().  The region to extract is expected to be in each
     fasta sequence header.
-        files is a list
+        files       = cds files to process
+        assemblyDir = directory (different from cds file dir) contains sequence assemblies
+        window      = window to extract on both sides of orf
     """
-    print("processFiles()")
     for f in files:
-        print("File: %s" %(f))
-        for seqrec in SeqIO.parse( f, "fasta" ):
-            nameTmp   = seqrec.id.split('.')
-            orfName   = nameTmp[1]
-            orfInfo   = seqrec.description.split()
-            orfInfo.pop(0)
-            # set window positions for getting region
-            orfTmp    = orfInfo[0].split('_')
-            orfLocTmp = [int(x) for x in orfInfo[1].split("-")]
-            # set left site, can't have a value less than zero
-            # don't worry about having a right side greater than chrom length
-            # samtools just returns the end of the chromosome.
-            if orfLocTmp[0] - window < 0:
-                orfLocTmp[0] = 0
-            else:
-                orfLocTmp[0] = orfLocTmp[0] - window
-                
-            orfChrom  = orfTmp[1]
-            strain    = orfTmp[0]
-            orfLoc    = str(orfLocTmp[0]) + "-" + str(orfLocTmp[1])
-            seq = extract( f , orfName, orfLoc, orfChrom, strain, assemblyDir )
-            seqRegion = seq.replace('>', '>' + strain + " " + orfName + " ")
-            print( seqRegion , end='')
+        outFile =re.sub(r"fa","gene.fa", f)
+        with open(outFile, 'w') as output:
             
- 
-
+            for seqrec in SeqIO.parse( f, "fasta" ):
+                nameTmp   = seqrec.id.split('.')
+                orfName   = nameTmp[1]
+                orfInfo   = seqrec.description.split()
+                orfInfo.pop(0)
+                # set window positions for getting region
+                orfTmp    = orfInfo[0].split('_')
+                orfLocTmp = [int(x) for x in orfInfo[1].split("-")]
+                # set left site, can't have a value less than zero
+                # don't worry about having a right side greater than chrom length
+                # samtools just returns the end of the chromosome.
+                if orfLocTmp[0] - window < 0:
+                    orfLocTmp[0] = 0
+                else:
+                    orfLocTmp[0] = orfLocTmp[0] - window
+                orfLocTmp[1] += window    # add window to right side
+                
+                orfChrom  = orfTmp[1]
+                strain    = orfTmp[0]
+                orfLoc    = str(orfLocTmp[0]) + "-" + str(orfLocTmp[1])
+                seq = extract( f , orfName, orfLoc, orfChrom, strain, assemblyDir )
+                seqRegion = seq.replace('>', '>' + strain + " " + orfName + " ")
+                print( orfName )
+                output.write( seqRegion)
 
 def main():
     """
