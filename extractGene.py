@@ -45,10 +45,6 @@ def extract( refFile, orf, loc, chrom, strain, assemblyDir  ):
     example:
     
         samtools faidx yjm555.fa Chr07:1060052-1060879
-    
-    returns:
-    
-        >Chr07:1060052-1060879program = '/opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar'
         
     """
     #print( refFile, orf, strain, chrom, loc )
