@@ -32,7 +32,6 @@
 
 """
 from Bio import SeqIO
-from Bio import SeqRecord
 import argparse	
 import os
 import re
@@ -71,33 +70,37 @@ def processFiles( files, assemblyDir, window ):
         window      = window to extract on both sides of orf
     """
     for f in files:
-        outFile =re.sub(r"fa","gene.fa", f)
-        with open(outFile, 'w') as output:
-            
-            for seqrec in SeqIO.parse( f, "fasta" ):
-                nameTmp   = seqrec.id.split('.')
-                orfName   = nameTmp[1]
-                orfInfo   = seqrec.description.split()
-                orfInfo.pop(0)
-                # set window positions for getting region
-                orfTmp    = orfInfo[0].split('_')
-                orfLocTmp = [int(x) for x in orfInfo[1].split("-")]
-                # set left site, can't have a value less than zero
-                # don't worry about having a right side greater than chrom length
-                # samtools just returns the end of the chromosome.
-                if orfLocTmp[0] - window < 0:
-                    orfLocTmp[0] = 0
-                else:
-                    orfLocTmp[0] = orfLocTmp[0] - window
-                orfLocTmp[1] += window    # add window to right side
+        #outFile =re.sub(r"fa","gene.fa", f)
+        #with open(outFile, 'w') as output:
+        print(f)
+        for seqrec in SeqIO.parse( f, "fasta" ):
+            nameTmp   = seqrec.id.split('.')
+            orfName   = nameTmp[1]
+            orfInfo   = seqrec.description.split()
+            orfInfo.pop(0)
+            # set window positions for getting region
+            orfTmp    = orfInfo[0].split('_')
+            orfLocTmp = [int(x) for x in orfInfo[1].split("-")]
+            # set left site, can't have a value less than zero
+            # don't worry about having a right side greater than chrom length
+            # samtools just returns the end of the chromosome.
+            if orfLocTmp[0] - window < 0:
+                orfLocTmp[0] = 0
+            else:
+                orfLocTmp[0] = orfLocTmp[0] - window
+            orfLocTmp[1] += window    # add window to right side
                 
-                orfChrom  = orfTmp[1]
-                strain    = orfTmp[0]
-                orfLoc    = str(orfLocTmp[0]) + "-" + str(orfLocTmp[1])
-                seq = extract( f , orfName, orfLoc, orfChrom, strain, assemblyDir )
-                seqRegion = seq.replace('>', '>' + strain + " " + orfName + " ")
-                print( orfName )
-                output.write( seqRegion)
+            orfChrom  = orfTmp[1]
+            strain    = orfTmp[0]
+            orfLoc    = str(orfLocTmp[0]) + "-" + str(orfLocTmp[1])
+            seq = extract( f , orfName, orfLoc, orfChrom, strain, assemblyDir )
+            seqRegion = seq.replace('>', '>' + strain + " " + orfName + " ")
+            outFile = orfName + "." + "fa"
+            with open(outFile, 'a') as output:
+                if not re.search(r'[GATC]{10,100}$', seqRegion):                   
+                    seqRegion = seqRegion.rstrip() + " BAD\n"
+                    
+                output.write(seqRegion)
 
 def main():
     """
@@ -126,7 +129,7 @@ def main():
         print("\n  extractGene.py -f list.txt -w window [ -i ]")
         print("\n  Purpose: Extract a gene plus & minus user defined window from a sequence assembly.")
         print("\n  Input  : list file, full path to assemblies, window size (default 1000 bp)")
-        print("\n  Output : fasta files for each sample.")    
+        print("\n  Output : fasta files for each orf.")    
         print("\n  Usage  : extractGene.py -f list.txt -d /home/GLBRCORG/user/assemblyDir -w 200")        
         print("  ")       
         print("\tTo see Python Docs for this program:")
