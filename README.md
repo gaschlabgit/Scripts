@@ -142,3 +142,9 @@ extractGene.py
 	
 	Extract sequence plus window from genome assembly
 
+blastnExtract.py
+
+	Extract a gene plus & minus user defined window from a sequence assembly
+	by parsing blastn results generated using -outfmt 6 
+
+
