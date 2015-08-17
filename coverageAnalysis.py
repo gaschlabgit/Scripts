@@ -64,12 +64,20 @@ chromDict = {  "ref|NC_001133|" : "chr1", "ref|NC_001134|" : "chr2", "ref|NC_001
            "chr1" : "chr1", "chr2" : "chr2", "chr3" : "chr3", "chr4" : "chr4", "chr5" : "chr5", "chr6" : "chr6", 
            "chr7" : "chr7", "chr8" : "chr8", "chr9" : "chr9", "chr10" : "chr10", "chr11" : "chr11", 
            "chr12" : "chr12", "chr13" : "chr13", "chr14" : "chr14", "chr15" : "chr15", "chr16" : "chr16", 
-           "chr17" : "chr17"  } 
+           "chr17" : "chr17" ,   "chrI": "chrI", "chrII":"chrII", "chrIII": "chrIII", "chrIV":"chrIV", "chrV":"chrV",
+           "chrVI":"chrVI", "chrVII":"chrVII", "chrVIII":"chrVIII", "chrIX":"chrIX", "chrX":"chrX", 
+           "chrXI":"chrXI", "chrXII":"chrXII", "chrXIII":"chrXIII", "chrXIV":"chrXIV", "chrXV":"chrXV",
+           "chrXVI":"chrXVI", "chrMito":"Mito"} 
 
 # use to print ordered result to file
 chromSet = [ "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
              "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15",
              "chr16", "chr17" ]
+
+# for Jame's data, he maps to an older reference, which names chrom using Roman Numerals.             
+chromSetRoman = [ "chrI", "chrII", "chrIII", "chrIV", "chrV", "chrVI", "chrVII", "chrVIII",
+             "chrIX", "chrX", "chrXI", "chrXII", "chrXIII", "chrXIV", "chrXV",
+             "chrXVI", "Mito" ]
              
 def main():
     """
@@ -103,7 +111,6 @@ def main():
         print(" Required Parameters: -b sampleName.bam")
         print(" Optional Parameters:")
         print(" \t-w window size")
-        #print(" \t-c cutoff score [Default = .6]")
         print("\n Input : Bam file")
         print(" To run:  /home/mplace/scripts/coverageAnalysis.py -b samplename.bam \n")
         print(" Output: Tab delimited table w/ columns Chrom Start End Count Count/median log2(Count/median)  ")
@@ -124,11 +131,6 @@ def main():
     else:
         window = 500          # default window size
         
-    # handle CNV cutoff score 
-    #if cmdResults['CUT']:
-    #    score = float(cmdResults['CUT'])
-    #else:
-    #    score = 0.60
     
     if cmdResults['BAM']:
         infile = cmdResults['BAM']   
@@ -186,9 +188,6 @@ def main():
                         endPos   += window
                         ctr       = 0
                     #
-                        
-                        
-               
         # sometimes mapped reads have a chromosome named "*", get rid of those
         remove = [ key for key in chrom if key == '*']
         for key in remove:
@@ -209,6 +208,9 @@ def main():
                   
         # loop through all chromosomes in dictionary
         for item in chromList:
+            if item in ['MT', 'AB325691','MTR','I','II','III']:    # exclude S. pombe chromosomes in bam file, we only want S. cerevisiae
+                continue
+            
             cntMedian  = median( chrom[item]['cnt'] )
             logList    = []          # used to calculate standard deviation
             logPos     = 0           # used to index chrom[item]['logRatio']
@@ -229,16 +231,19 @@ def main():
                 logPos += 1      
                 logList.append(logRatio)
                 # write results to stdout
-                print("%s\t%s\t%s\t%s\t%s\t%s" %(item, int(position), end, count, ratio, logRatio  ) )
+                adjPos = int(position) - window      #adjust window position
+                adjEnd = int(end) - window              
+                print("%s\t%s\t%s\t%s\t%s\t%s" %(item, adjPos, adjEnd, count, ratio, logRatio  ) )
             chromStDev = stdev(logList)
             # make final copy number calls here
             for position, count, logR in zip(chrom[item]['pos'], chrom[item]['cnt'], chrom[item]['logRatio']):
                 if ( abs(logR) > (1 + 2*chromStDev) ): 
-                    end = int(position) + window
-                    answer = str(position) + "\t" + str(end) + "\t" + str(count) +"\t" + str(logR) + "\t" + str(chromStDev)
+                    end = int(position) 
+                    adjStart = int(position) - window
+                    answer = str(adjStart) + "\t" + str(end) + "\t" + str(count) +"\t" + str(logR) + "\t" + str(chromStDev)
                     result[chromDict[item]].append(answer) 
         # write final calls to file in chrom order       
-        for i in chromSet:
+        for i in chromSetRoman:
             for x in result[i]:
                 cutOffout.write("%s\t%s\n" %(i,x))
             
